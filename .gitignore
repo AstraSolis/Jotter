@@ -1,21 +1,53 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE 和编辑器
+.idea
 *.iml
-.kotlin
+*.swp
+*~
+
+# Gradle 构建系统
 .gradle
+.kotlin
 **/build/
-xcuserdata
 !src/**/build/
 local.properties
-.idea
-.DS_Store
+
+# Android 特定
 captures
 .externalNativeBuild
 .cxx
+*.apk
+*.aab
+*.ap_
+*.dex
+proguard/
+
+# iOS/Xcode 特定
+xcuserdata
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
 !*.xcodeproj/xcshareddata/
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+*.ipa
+*.dSYM.zip
+*.dSYM
+Pods/
+
+# Web/Node.js 特定
 node_modules/
 kotlin-js-store/
+
+# 日志文件
 *.log
+
+# 安全敏感文件 (密钥/证书)
+*.keystore
+*.jks
+.env
+.env.local

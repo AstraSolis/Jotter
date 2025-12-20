@@ -1,49 +1,109 @@
 package top.astrasolis.jotter
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import top.astrasolis.jotter.ui.navigation.NavigationRoute
+import top.astrasolis.jotter.ui.screens.HomeScreen
+import top.astrasolis.jotter.ui.screens.JournalScreen
+import top.astrasolis.jotter.ui.screens.NotesScreen
+import top.astrasolis.jotter.ui.screens.SettingsScreen
+import top.astrasolis.jotter.ui.screens.TodoScreen
+import top.astrasolis.jotter.ui.theme.JotterTheme
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
+import top.yukonga.miuix.kmp.basic.FloatingNavigationBarMode
+import top.yukonga.miuix.kmp.basic.NavigationItem
+import top.yukonga.miuix.kmp.basic.Scaffold
 
-import jotter.composeapp.generated.resources.Res
-import jotter.composeapp.generated.resources.compose_multiplatform
-
+/**
+ * Jotter 应用主入口
+ * 使用 FloatingNavigationBar 进行导航
+ */
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
+    JotterTheme {
+        // 导航项列表
+        val navigationItems = remember {
+            listOf(
+                NavigationItem("首页", Icons.Default.Home),
+                NavigationItem("日记", Icons.Default.DateRange),
+                NavigationItem("待办", Icons.Default.CheckCircle),
+                NavigationItem("笔记", Icons.Outlined.Edit),
+                NavigationItem("设置", Icons.Default.Settings),
+            )
+        }
+        
+        // 路由映射
+        val routes = remember {
+            listOf(
+                NavigationRoute.HOME,
+                NavigationRoute.JOURNAL,
+                NavigationRoute.TODO,
+                NavigationRoute.NOTES,
+                NavigationRoute.SETTINGS,
+            )
+        }
+        
+        var selectedIndex by remember { mutableIntStateOf(0) }
+        
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            // 根据窗口宽度计算外边距：小屏幕边距小使图标更紧凑
+            val horizontalPadding = when {
+                maxWidth < 400.dp -> 8.dp   // 小屏幕更紧凑
+                maxWidth < 600.dp -> 16.dp
+                maxWidth < 800.dp -> 48.dp
+                else -> 80.dp
             }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+            
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                bottomBar = {
+                    FloatingNavigationBar(
+                        items = navigationItems,
+                        selected = selectedIndex,
+                        onClick = { index -> selectedIndex = index },
+                        mode = FloatingNavigationBarMode.IconOnly,
+                        horizontalOutSidePadding = horizontalPadding,
+                    )
+                },
+            ) { innerPadding ->
+                // 根据当前选中索引显示对应页面
+                when (routes[selectedIndex]) {
+                    NavigationRoute.HOME -> HomeScreen(
+                        innerPadding = innerPadding,
+                        onNavigate = { route -> 
+                            selectedIndex = routes.indexOf(route)
+                        },
+                    )
+                    NavigationRoute.JOURNAL -> JournalScreen(
+                        innerPadding = innerPadding,
+                    )
+                    NavigationRoute.TODO -> TodoScreen(
+                        innerPadding = innerPadding,
+                    )
+                    NavigationRoute.NOTES -> NotesScreen(
+                        innerPadding = innerPadding,
+                    )
+                    NavigationRoute.SETTINGS -> SettingsScreen(
+                        innerPadding = innerPadding,
+                    )
                 }
             }
         }
     }
 }
+
+
+
