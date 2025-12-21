@@ -110,6 +110,9 @@ private fun MainContent() {
     
     var selectedIndex by remember { mutableIntStateOf(0) }
     
+    // 是否显示底部导航栏（设置二级菜单时隐藏）
+    var showBottomBar by remember { mutableStateOf(true) }
+    
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         // 根据窗口宽度计算外边距：小屏幕边距小使图标更紧凑
         val horizontalPadding = when {
@@ -122,13 +125,15 @@ private fun MainContent() {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             bottomBar = {
-                FloatingNavigationBar(
-                    items = navigationItems,
-                    selected = selectedIndex,
-                    onClick = { index -> selectedIndex = index },
-                    mode = FloatingNavigationBarMode.IconOnly,
-                    horizontalOutSidePadding = horizontalPadding,
-                )
+                if (showBottomBar) {
+                    FloatingNavigationBar(
+                        items = navigationItems,
+                        selected = selectedIndex,
+                        onClick = { index -> selectedIndex = index },
+                        mode = FloatingNavigationBarMode.IconOnly,
+                        horizontalOutSidePadding = horizontalPadding,
+                    )
+                }
             },
         ) { innerPadding ->
             // 根据当前选中索引显示对应页面
@@ -150,6 +155,9 @@ private fun MainContent() {
                 )
                 NavigationRoute.SETTINGS -> SettingsScreen(
                     innerPadding = innerPadding,
+                    onSubPageChange = { inSubPage ->
+                        showBottomBar = !inSubPage
+                    },
                 )
             }
         }

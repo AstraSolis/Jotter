@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,28 +20,32 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.astrasolis.jotter.data.AppContainer
-import top.astrasolis.jotter.ui.components.JotterCard
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.ui.theme.pressScale
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.extra.SuperArrow
+import top.yukonga.miuix.kmp.extra.SuperDropdown
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -57,14 +60,20 @@ private enum class SettingsRoute {
 
 /**
  * 设置页面
- * 双层导航结构
+ * 双层导航结构，使用 miuix 原生组件
  */
 @Composable
 fun SettingsScreen(
     innerPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    onSubPageChange: (Boolean) -> Unit = {},
 ) {
     var currentRoute by remember { mutableStateOf(SettingsRoute.MAIN) }
+    
+    // 当路由变化时通知外层
+    LaunchedEffect(currentRoute) {
+        onSubPageChange(currentRoute != SettingsRoute.MAIN)
+    }
     
     AnimatedContent(
         targetState = currentRoute,
@@ -129,10 +138,26 @@ private fun MainSettingsPage(
         )
         
         // 界面设置分组
-        SettingsGroup(title = "界面设置") {
-            SettingsNavItem(
-                icon = Icons.Default.Palette,
+        SmallTitle(text = "界面设置")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
                 title = "外观",
+                summary = null,
+                leftAction = {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
+                },
                 onClick = { onNavigate(SettingsRoute.APPEARANCE) },
             )
         }
@@ -140,10 +165,26 @@ private fun MainSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 数据管理分组
-        SettingsGroup(title = "数据管理") {
-            SettingsNavItem(
-                icon = Icons.Default.Storage,
+        SmallTitle(text = "数据管理")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
                 title = "存储",
+                summary = null,
+                leftAction = {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.Storage,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
+                },
                 onClick = { onNavigate(SettingsRoute.DATA) },
             )
         }
@@ -151,11 +192,26 @@ private fun MainSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 更多分组
-        SettingsGroup(title = "更多") {
-            SettingsNavItem(
-                icon = Icons.Default.Info,
+        SmallTitle(text = "更多")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
                 title = "关于",
-                trailingText = "1.0.0",
+                summary = "1.0.0",
+                leftAction = {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
+                },
                 onClick = { onNavigate(SettingsRoute.ABOUT) },
             )
         }
@@ -173,6 +229,10 @@ private fun AppearanceSettingsPage(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 主题选项
+    val themeOptions = remember { listOf("浅色模式", "深色模式", "跟随系统") }
+    var selectedThemeIndex by remember { mutableIntStateOf(2) } // 默认跟随系统
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -185,21 +245,20 @@ private fun AppearanceSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
         
         // 主题选择
-        SettingsGroup(title = "主题") {
-            SettingsOptionItem(
-                title = "浅色模式",
-                selected = false,
-                onClick = { /* TODO */ },
-            )
-            SettingsOptionItem(
-                title = "深色模式",
-                selected = false,
-                onClick = { /* TODO */ },
-            )
-            SettingsOptionItem(
-                title = "跟随系统",
-                selected = true,
-                onClick = { /* TODO */ },
+        SmallTitle(text = "主题")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperDropdown(
+                title = "主题模式",
+                items = themeOptions,
+                selectedIndex = selectedThemeIndex,
+                onSelectedIndexChange = { index ->
+                    selectedThemeIndex = index
+                    // TODO: 保存主题设置
+                },
             )
         }
         
@@ -233,11 +292,23 @@ private fun DataSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
         
         // 存储位置
-        SettingsGroup(title = "存储位置") {
-            SettingsDetailItem(
-                icon = Icons.Default.FolderOpen,
+        SmallTitle(text = "存储位置")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
                 title = "数据目录",
-                subtitle = currentDataPath,
+                summary = currentDataPath,
+                leftAction = {
+                    Icon(
+                        imageVector = Icons.Default.FolderOpen,
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp),
+                        tint = MiuixTheme.colorScheme.onSurface,
+                    )
+                },
                 onClick = {
                     scope.launch {
                         val picker = AppContainer.directoryPicker
@@ -260,15 +331,20 @@ private fun DataSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 备份与恢复
-        SettingsGroup(title = "备份与恢复") {
-            SettingsDetailItem(
+        SmallTitle(text = "备份与恢复")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
                 title = "导出数据",
-                subtitle = "将数据导出为压缩包",
+                summary = "将数据导出为压缩包",
                 onClick = { /* TODO */ },
             )
-            SettingsDetailItem(
+            SuperArrow(
                 title = "导入数据",
-                subtitle = "从压缩包恢复数据",
+                summary = "从压缩包恢复数据",
                 onClick = { /* TODO */ },
             )
         }
@@ -295,13 +371,91 @@ private fun AboutPage(
         // 返回标题栏
         SettingsTopBar(title = "关于", onBack = onBack)
         
-        Spacer(modifier = Modifier.height(AppTheme.spacing.md))
+        Spacer(modifier = Modifier.height(AppTheme.spacing.xl))
         
-        // 应用信息
-        SettingsGroup(title = "应用信息") {
-            SettingsInfoItem(title = "应用名称", value = "Jotter")
-            SettingsInfoItem(title = "版本", value = "1.0.0")
-            SettingsInfoItem(title = "构建类型", value = "Release")
+        // 应用图标区域（居中）
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // 应用图标占位（后续替换为实际图标）
+            Card(
+                modifier = Modifier.size(80.dp),
+            ) {
+                // TODO: 替换为应用图标
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(AppTheme.spacing.lg),
+                    tint = MiuixTheme.colorScheme.primary,
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
+            
+            // 应用名称
+            Text(
+                text = "Jotter",
+                style = MiuixTheme.textStyles.title1,
+                color = MiuixTheme.colorScheme.onBackground,
+            )
+            
+            Spacer(modifier = Modifier.height(AppTheme.spacing.xs))
+            
+            // 版本号
+            Text(
+                text = "1.0.0",
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onBackgroundVariant,
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.xl))
+        
+        // 应用介绍卡片
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppTheme.spacing.lg),
+            ) {
+                Text(
+                    text = "Jotter",
+                    style = MiuixTheme.textStyles.title3,
+                    color = MiuixTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.height(AppTheme.spacing.xs))
+                Text(
+                    text = "一个简洁优雅的跨平台笔记应用，支持日记、待办和笔记管理。",
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onBackgroundVariant,
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
+        
+        // 项目链接
+        SmallTitle(text = "项目链接")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            val uriHandler = LocalUriHandler.current
+            SuperArrow(
+                title = "GitHub",
+                summary = "https://github.com/AstraSolis/Jotter",
+                onClick = { 
+                    uriHandler.openUri("https://github.com/AstraSolis/Jotter")
+                },
+            )
         }
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.xxl))
@@ -345,221 +499,6 @@ private fun SettingsTopBar(
             text = title,
             style = MiuixTheme.textStyles.title2,
             color = MiuixTheme.colorScheme.onBackground,
-        )
-    }
-}
-
-/**
- * 设置分组
- */
-@Composable
-private fun SettingsGroup(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        // 分组标题
-        Text(
-            text = title,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onBackgroundVariant,
-            modifier = Modifier.padding(
-                horizontal = AppTheme.spacing.screenH + AppTheme.spacing.md,
-                vertical = AppTheme.spacing.sm,
-            ),
-        )
-        
-        // 卡片内容
-        JotterCard {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                content()
-            }
-        }
-    }
-}
-
-/**
- * 设置导航项（带箭头，用于主页面）
- */
-@Composable
-private fun SettingsNavItem(
-    icon: ImageVector,
-    title: String,
-    modifier: Modifier = Modifier,
-    trailingText: String? = null,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = AppTheme.spacing.lg,
-                vertical = AppTheme.spacing.md + AppTheme.spacing.xs,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(22.dp),
-            tint = MiuixTheme.colorScheme.onBackground,
-        )
-        
-        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
-        
-        Text(
-            text = title,
-            style = MiuixTheme.textStyles.body1,
-            color = MiuixTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
-        )
-        
-        if (trailingText != null) {
-            Text(
-                text = trailingText,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onBackgroundVariant,
-            )
-            Spacer(modifier = Modifier.width(AppTheme.spacing.xs))
-        }
-        
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MiuixTheme.colorScheme.onBackgroundVariant,
-        )
-    }
-}
-
-/**
- * 设置详情项（带副标题，用于子页面）
- */
-@Composable
-private fun SettingsDetailItem(
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
-    onClick: (() -> Unit)? = null,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (onClick != null) Modifier.clickable(onClick = onClick) 
-                else Modifier
-            )
-            .padding(
-                horizontal = AppTheme.spacing.lg,
-                vertical = AppTheme.spacing.md,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = MiuixTheme.colorScheme.onBackground,
-            )
-            Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
-        }
-        
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MiuixTheme.textStyles.body1,
-                color = MiuixTheme.colorScheme.onBackground,
-            )
-            Text(
-                text = subtitle,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onBackgroundVariant,
-                maxLines = 1,
-            )
-        }
-        
-        if (onClick != null) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MiuixTheme.colorScheme.onBackgroundVariant,
-            )
-        }
-    }
-}
-
-/**
- * 设置选项项（用于单选）
- */
-@Composable
-private fun SettingsOptionItem(
-    title: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(
-                horizontal = AppTheme.spacing.lg,
-                vertical = AppTheme.spacing.md,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = MiuixTheme.textStyles.body1,
-            color = if (selected) MiuixTheme.colorScheme.primary 
-                   else MiuixTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
-        )
-        
-        if (selected) {
-            Text(
-                text = "✓",
-                style = MiuixTheme.textStyles.body1,
-                color = MiuixTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-/**
- * 设置信息项（纯展示）
- */
-@Composable
-private fun SettingsInfoItem(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = AppTheme.spacing.lg,
-                vertical = AppTheme.spacing.md,
-            ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = MiuixTheme.textStyles.body1,
-            color = MiuixTheme.colorScheme.onBackground,
-            modifier = Modifier.weight(1f),
-        )
-        
-        Text(
-            text = value,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onBackgroundVariant,
         )
     }
 }
