@@ -114,4 +114,74 @@ class SettingsRepository(
         )
         saveAppState(currentState.copy(isFirstLaunch = false))
     }
+    
+    /**
+     * 检查是否启用开发者模式
+     */
+    fun isDeveloperModeEnabled(): Boolean {
+        val state = loadAppState() ?: return false
+        return state.isDeveloperModeEnabled
+    }
+    
+    /**
+     * 设置开发者模式
+     */
+    fun setDeveloperModeEnabled(enabled: Boolean) {
+        val currentState = loadAppState() ?: return
+        saveAppState(currentState.copy(isDeveloperModeEnabled = enabled))
+    }
+    
+    /**
+     * 重置为首次启动状态（用于调试引导页）
+     */
+    fun resetToFirstLaunch() {
+        val currentState = loadAppState() ?: return
+        saveAppState(currentState.copy(isFirstLaunch = true))
+    }
+    
+    /**
+     * 重置所有设置为默认值
+     */
+    fun resetAllSettings() {
+        saveSettings(AppSettings())
+    }
+    
+    /**
+     * 获取存储统计信息
+     */
+    fun getStorageInfo(): StorageInfo {
+        val dataPath = getDataPath()
+        val journalsDir = dataPath / "journals"
+        val notesDir = dataPath / "notes"
+        val todosDir = dataPath / "todos"
+        
+        return StorageInfo(
+            dataPath = dataPath.toString(),
+            journalCount = countFiles(journalsDir),
+            noteCount = countFiles(notesDir),
+            todoCount = countFiles(todosDir),
+        )
+    }
+    
+    private fun countFiles(path: Path): Int {
+        return try {
+            if (fileSystem.exists(path)) {
+                fileSystem.list(path).size
+            } else {
+                0
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
 }
+
+/**
+ * 存储统计信息
+ */
+data class StorageInfo(
+    val dataPath: String,
+    val journalCount: Int,
+    val noteCount: Int,
+    val todoCount: Int,
+)

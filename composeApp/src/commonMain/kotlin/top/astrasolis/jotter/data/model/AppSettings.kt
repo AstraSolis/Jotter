@@ -41,4 +41,6 @@ data class AppState(
     val isFirstLaunch: Boolean = true,
     /** 应用版本 (用于数据迁移) */
     val appVersion: String = "1.0.0",
+    /** 是否启用开发者模式 */
+    val isDeveloperModeEnabled: Boolean = false,
 )

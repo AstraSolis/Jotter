@@ -20,9 +20,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +60,7 @@ private enum class SettingsRoute {
     APPEARANCE,
     DATA,
     ABOUT,
+    DEVELOPER,
 }
 
 /**
@@ -68,8 +72,12 @@ fun SettingsScreen(
     innerPadding: PaddingValues,
     modifier: Modifier = Modifier,
     onSubPageChange: (Boolean) -> Unit = {},
+    onShowSetupScreen: () -> Unit = {},
 ) {
     var currentRoute by remember { mutableStateOf(SettingsRoute.MAIN) }
+    
+    // Toast 状态管理
+    var toastMessage by remember { mutableStateOf<String?>(null) }
     
     // 处理系统返回键（仅在二级菜单时拦截）
     PlatformBackHandler(enabled = currentRoute != SettingsRoute.MAIN) {
@@ -81,38 +89,81 @@ fun SettingsScreen(
         onSubPageChange(currentRoute != SettingsRoute.MAIN)
     }
     
-    AnimatedContent(
-        targetState = currentRoute,
-        transitionSpec = {
-            if (targetState == SettingsRoute.MAIN) {
-                // 返回主页面
-                (slideInHorizontally { -it } + fadeIn()) togetherWith
-                    (slideOutHorizontally { it } + fadeOut())
-            } else {
-                // 进入子页面
-                (slideInHorizontally { it } + fadeIn()) togetherWith
-                    (slideOutHorizontally { -it } + fadeOut())
+    // Toast 自动消失
+    LaunchedEffect(toastMessage) {
+        if (toastMessage != null) {
+            kotlinx.coroutines.delay(2000)
+            toastMessage = null
+        }
+    }
+    
+    androidx.compose.foundation.layout.Box(modifier = modifier.fillMaxSize()) {
+        AnimatedContent(
+            targetState = currentRoute,
+            transitionSpec = {
+                if (targetState == SettingsRoute.MAIN) {
+                    // 返回主页面
+                    (slideInHorizontally { -it } + fadeIn()) togetherWith
+                        (slideOutHorizontally { it } + fadeOut())
+                } else {
+                    // 进入子页面
+                    (slideInHorizontally { it } + fadeIn()) togetherWith
+                        (slideOutHorizontally { -it } + fadeOut())
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        ) { route ->
+            when (route) {
+                SettingsRoute.MAIN -> MainSettingsPage(
+                    innerPadding = innerPadding,
+                    onNavigate = { currentRoute = it },
+                )
+                SettingsRoute.APPEARANCE -> AppearanceSettingsPage(
+                    innerPadding = innerPadding,
+                    onBack = { currentRoute = SettingsRoute.MAIN },
+                )
+                SettingsRoute.DATA -> DataSettingsPage(
+                    innerPadding = innerPadding,
+                    onBack = { currentRoute = SettingsRoute.MAIN },
+                )
+                SettingsRoute.ABOUT -> AboutPage(
+                    innerPadding = innerPadding,
+                    onBack = { currentRoute = SettingsRoute.MAIN },
+                    onShowToast = { toastMessage = it },
+                )
+                SettingsRoute.DEVELOPER -> DeveloperToolsPage(
+                    innerPadding = innerPadding,
+                    onBack = { currentRoute = SettingsRoute.MAIN },
+                    onShowSetupScreen = onShowSetupScreen,
+                    onShowToast = { toastMessage = it },
+                )
             }
-        },
-        modifier = modifier.fillMaxSize(),
-    ) { route ->
-        when (route) {
-            SettingsRoute.MAIN -> MainSettingsPage(
-                innerPadding = innerPadding,
-                onNavigate = { currentRoute = it },
-            )
-            SettingsRoute.APPEARANCE -> AppearanceSettingsPage(
-                innerPadding = innerPadding,
-                onBack = { currentRoute = SettingsRoute.MAIN },
-            )
-            SettingsRoute.DATA -> DataSettingsPage(
-                innerPadding = innerPadding,
-                onBack = { currentRoute = SettingsRoute.MAIN },
-            )
-            SettingsRoute.ABOUT -> AboutPage(
-                innerPadding = innerPadding,
-                onBack = { currentRoute = SettingsRoute.MAIN },
-            )
+        }
+        
+        // Toast 显示
+        toastMessage?.let { message ->
+            androidx.compose.animation.AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 100.dp),
+            ) {
+                Card(
+                    modifier = Modifier.padding(horizontal = AppTheme.spacing.screenH),
+                ) {
+                    Text(
+                        text = message,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(
+                            horizontal = AppTheme.spacing.xl,
+                            vertical = AppTheme.spacing.md,
+                        ),
+                    )
+                }
+            }
         }
     }
 }
@@ -126,6 +177,11 @@ private fun MainSettingsPage(
     onNavigate: (SettingsRoute) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // 检查开发者模式状态
+    val isDeveloperModeEnabled = remember { 
+        AppContainer.settingsRepository.isDeveloperModeEnabled() 
+    }
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -220,6 +276,26 @@ private fun MainSettingsPage(
                 },
                 onClick = { onNavigate(SettingsRoute.ABOUT) },
             )
+            
+            // 开发者工具（仅在启用时显示）
+            if (isDeveloperModeEnabled) {
+                SuperArrow(
+                    title = "开发者工具",
+                    summary = null,
+                    leftAction = {
+                        Row {
+                            Icon(
+                                imageVector = Icons.Default.Code,
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = MiuixTheme.colorScheme.onSurface,
+                            )
+                            Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                        }
+                    },
+                    onClick = { onNavigate(SettingsRoute.DEVELOPER) },
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.xxl))
@@ -366,8 +442,20 @@ private fun DataSettingsPage(
 private fun AboutPage(
     innerPadding: PaddingValues,
     onBack: () -> Unit,
+    onShowToast: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
+    
+    // 点击计数器用于激活开发者模式
+    var clickCount by remember { mutableIntStateOf(0) }
+    var devModeActivated by remember { mutableStateOf(false) }
+    
+    // 检查是否已经是开发者模式
+    val isAlreadyDeveloper = remember { 
+        AppContainer.settingsRepository.isDeveloperModeEnabled() 
+    }
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -420,29 +508,32 @@ private fun AboutPage(
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.xl))
         
-        // 应用介绍卡片
+        // 应用介绍卡片（点击激活开发者模式）
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(AppTheme.spacing.lg),
-            ) {
-                Text(
-                    text = "Jotter",
-                    style = MiuixTheme.textStyles.title3,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(AppTheme.spacing.xs))
-                Text(
-                    text = "一个简洁优雅的跨平台笔记应用，支持日记、待办和笔记管理。",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onBackgroundVariant,
-                )
-            }
+            top.yukonga.miuix.kmp.basic.BasicComponent(
+                title = "Jotter",
+                summary = "一个简洁优雅的跨平台笔记应用，支持日记、待办和笔记管理。",
+                onClick = if (!isAlreadyDeveloper && !devModeActivated) {
+                    {
+                        clickCount++
+                        if (clickCount >= 5) {
+                            // 激活开发者模式
+                            scope.launch {
+                                AppContainer.settingsRepository.setDeveloperModeEnabled(true)
+                                devModeActivated = true
+                                onShowToast("开发者模式已激活")
+                            }
+                        } else if (clickCount >= 3) {
+                            // 显示剩余次数提示
+                            onShowToast("再点 ${5 - clickCount} 次激活开发者模式")
+                        }
+                    }
+                } else null,
+            )
         }
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
@@ -507,4 +598,202 @@ private fun SettingsTopBar(
             color = MiuixTheme.colorScheme.onBackground,
         )
     }
+}
+
+/**
+ * 开发者工具页面
+ */
+@Composable
+private fun DeveloperToolsPage(
+    innerPadding: PaddingValues,
+    onBack: () -> Unit,
+    onShowSetupScreen: () -> Unit,
+    onShowToast: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scope = rememberCoroutineScope()
+    
+    // 存储信息
+    val storageInfo = remember { AppContainer.settingsRepository.getStorageInfo() }
+    
+    // 操作状态
+    var showResetConfirm by remember { mutableStateOf(false) }
+    
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        // 返回标题栏
+        SettingsTopBar(title = "开发者工具", onBack = onBack)
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.md))
+        
+        // 调试功能
+        SmallTitle(text = "调试功能")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
+                title = "显示首次启动引导页",
+                summary = "立即显示引导页流程",
+                leftAction = {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
+                },
+                onClick = {
+                    onShowSetupScreen()
+                },
+            )
+            
+            SuperArrow(
+                title = "重置所有设置",
+                summary = "将设置恢复为默认值",
+                leftAction = {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
+                },
+                onClick = {
+                    showResetConfirm = true
+                },
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
+        
+        // 存储信息
+        SmallTitle(text = "存储信息")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            Column(
+                modifier = Modifier.padding(AppTheme.spacing.lg),
+            ) {
+                StorageInfoItem("数据目录", storageInfo.dataPath)
+                Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
+                StorageInfoItem("日记数量", "${storageInfo.journalCount} 篇")
+                Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
+                StorageInfoItem("笔记数量", "${storageInfo.noteCount} 篇")
+                Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
+                StorageInfoItem("待办数量", "${storageInfo.todoCount} 条")
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
+        
+        // 版本信息
+        SmallTitle(text = "版本信息")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            Column(
+                modifier = Modifier.padding(AppTheme.spacing.lg),
+            ) {
+                StorageInfoItem("应用版本", "1.0.0")
+                Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
+                StorageInfoItem("构建类型", "Debug")
+                Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
+                StorageInfoItem("平台", getPlatformName())
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
+        
+        // 关闭开发者模式
+        SmallTitle(text = "开发者模式")
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperArrow(
+                title = "关闭开发者模式",
+                summary = "隐藏开发者工具入口",
+                leftAction = {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.Build,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
+                },
+                onClick = {
+                    scope.launch {
+                        AppContainer.settingsRepository.setDeveloperModeEnabled(false)
+                        onShowToast("开发者模式已关闭")
+                        onBack()
+                    }
+                },
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.xxl))
+        
+        // 重置确认对话框状态处理
+        if (showResetConfirm) {
+            // 简单处理：直接执行重置
+            LaunchedEffect(Unit) {
+                AppContainer.settingsRepository.resetAllSettings()
+                onShowToast("已重置所有设置")
+                showResetConfirm = false
+            }
+        }
+    }
+}
+
+/**
+ * 存储信息项
+ */
+@Composable
+private fun StorageInfoItem(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+    ) {
+        Text(
+            text = label,
+            style = MiuixTheme.textStyles.body1,
+            color = MiuixTheme.colorScheme.onBackgroundVariant,
+        )
+        Text(
+            text = value,
+            style = MiuixTheme.textStyles.body1,
+            color = MiuixTheme.colorScheme.onBackground,
+        )
+    }
+}
+
+/**
+ * 获取平台名称
+ */
+private fun getPlatformName(): String {
+    return "Kotlin Multiplatform"
 }

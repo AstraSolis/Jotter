@@ -75,7 +75,11 @@ fun App() {
             }
             
             AppState.MAIN -> {
-                MainContent()
+                MainContent(
+                    onShowSetupScreen = {
+                        appState = AppState.SETUP
+                    }
+                )
             }
         }
     }
@@ -85,7 +89,9 @@ fun App() {
  * 主内容区域
  */
 @Composable
-private fun MainContent() {
+private fun MainContent(
+    onShowSetupScreen: () -> Unit = {},
+) {
     // 导航项列表
     val navigationItems = remember {
         listOf(
@@ -158,8 +164,10 @@ private fun MainContent() {
                     onSubPageChange = { inSubPage ->
                         showBottomBar = !inSubPage
                     },
+                    onShowSetupScreen = onShowSetupScreen,
                 )
             }
         }
     }
 }
+
