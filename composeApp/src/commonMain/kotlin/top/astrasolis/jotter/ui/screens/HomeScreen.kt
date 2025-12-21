@@ -29,6 +29,9 @@ import top.astrasolis.jotter.data.Todo
 import top.astrasolis.jotter.ui.navigation.NavigationRoute
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.utils.DateUtils
+import top.astrasolis.jotter.utils.TimeUtils
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 // 响应式布局断点
 private val WIDE_LAYOUT_BREAKPOINT = 800.dp
@@ -43,6 +46,7 @@ private val HORIZONTAL_PADDING = 48.dp
  * - 底部：今日待办卡片（窄屏）
  * - 右侧：今日待办卡片（宽屏）
  */
+@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
@@ -59,14 +63,15 @@ fun HomeScreen(
     val quoteSource = remember { "尼采" }
     
     // 今日待办
+    val currentTime = remember { TimeUtils.now() }
     var todayTodos by remember {
         mutableStateOf(
             listOf(
-                Todo(1, "完成项目文档", false),
-                Todo(2, "购买日用品", false),
-                Todo(3, "锻炼30分钟", true),
-                Todo(4, "阅读技术书籍", false),
-                Todo(5, "整理房间", false),
+                Todo(id = Uuid.random().toString(), title = "完成项目文档", completed = false, createdAt = currentTime, updatedAt = currentTime),
+                Todo(id = Uuid.random().toString(), title = "购买日用品", completed = false, createdAt = currentTime, updatedAt = currentTime),
+                Todo(id = Uuid.random().toString(), title = "锻炼30分钟", completed = true, createdAt = currentTime, updatedAt = currentTime),
+                Todo(id = Uuid.random().toString(), title = "阅读技术书籍", completed = false, createdAt = currentTime, updatedAt = currentTime),
+                Todo(id = Uuid.random().toString(), title = "整理房间", completed = false, createdAt = currentTime, updatedAt = currentTime),
             )
         )
     }
@@ -199,4 +204,3 @@ private fun MainContentWide(
         )
     }
 }
-

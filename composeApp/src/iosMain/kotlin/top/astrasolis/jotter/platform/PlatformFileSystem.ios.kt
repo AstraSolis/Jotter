@@ -1,0 +1,126 @@
+package top.astrasolis.jotter.platform
+
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath as okioToPath
+import okio.buffer
+import okio.use
+import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSURL
+import platform.Foundation.NSUserDomainMask
+
+/**
+ * iOS 平台文件系统实现
+ */
+actual class PlatformFileSystem actual constructor() {
+    private val fs = FileSystem.SYSTEM
+    
+    actual fun getAppConfigDir(): Path {
+        val documentsPath = getDocumentsDirectory()
+        return "$documentsPath/config".okioToPath()
+    }
+    
+    actual fun getDefaultDataDir(): Path {
+        val documentsPath = getDocumentsDirectory()
+        return "$documentsPath/data".okioToPath()
+    }
+    
+    private fun getDocumentsDirectory(): String {
+        val fileManager = NSFileManager.defaultManager
+        val urls = fileManager.URLsForDirectory(NSDocumentDirectory, NSUserDomainMask)
+        val documentsURL = urls.firstOrNull() as? NSURL
+        return documentsURL?.path ?: ""
+    }
+    
+    actual fun exists(path: Path): Boolean {
+        return fs.exists(path)
+    }
+    
+    actual fun isDirectory(path: Path): Boolean {
+        return fs.metadataOrNull(path)?.isDirectory == true
+    }
+    
+    actual fun createDirectories(path: Path) {
+        fs.createDirectories(path)
+    }
+    
+    actual fun readText(path: Path): String? {
+        if (!fs.exists(path)) return null
+        return fs.source(path).buffer().use { it.readUtf8() }
+    }
+    
+    actual fun writeText(path: Path, content: String) {
+        path.parent?.let { parent ->
+            if (!fs.exists(parent)) {
+                fs.createDirectories(parent)
+            }
+        }
+        fs.sink(path).buffer().use { it.writeUtf8(content) }
+    }
+    
+    actual fun delete(path: Path): Boolean {
+        return try {
+            fs.delete(path)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    actual fun deleteRecursively(path: Path): Boolean {
+        return try {
+            fs.deleteRecursively(path)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+    
+    actual fun list(path: Path): List<Path> {
+        return if (isDirectory(path)) {
+            fs.list(path)
+        } else {
+            emptyList()
+        }
+    }
+    
+    actual fun copy(source: Path, destination: Path) {
+        destination.parent?.let { parent ->
+            if (!fs.exists(parent)) {
+                fs.createDirectories(parent)
+            }
+        }
+        fs.copy(source, destination)
+    }
+    
+    actual fun copyDirectory(source: Path, destination: Path) {
+        if (!isDirectory(source)) {
+            copy(source, destination)
+            return
+        }
+        
+        createDirectories(destination)
+        
+        list(source).forEach { child ->
+            val childName = child.name
+            val destChild = destination / childName
+            if (isDirectory(child)) {
+                copyDirectory(child, destChild)
+            } else {
+                copy(child, destChild)
+            }
+        }
+    }
+    
+    actual fun move(source: Path, destination: Path) {
+        destination.parent?.let { parent ->
+            if (!fs.exists(parent)) {
+                fs.createDirectories(parent)
+            }
+        }
+        fs.atomicMove(source, destination)
+    }
+}
+
+actual fun String.toPath(): Path = this.okioToPath()

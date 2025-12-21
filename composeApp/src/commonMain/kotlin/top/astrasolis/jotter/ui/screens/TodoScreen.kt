@@ -31,38 +31,76 @@ import top.astrasolis.jotter.ui.components.JotterCard
 import top.astrasolis.jotter.ui.components.PageTitleBar
 import top.astrasolis.jotter.ui.components.SmallTitle
 import top.astrasolis.jotter.ui.theme.AppTheme
+import top.astrasolis.jotter.utils.TimeUtils
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * 待办事项页面
  * 显示待办列表，支持勾选完成
  */
+@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun TodoScreen(
     innerPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
+    val currentTime = remember { TimeUtils.now() }
+    
     // 示例数据
     var todos by remember {
         mutableStateOf(
             listOf(
-                Todo(1, "完成项目文档", false, "工作", "今天"),
-                Todo(2, "购买日用品", false, "生活", "今天"),
-                Todo(3, "锻炼30分钟", true, "健康", "今天"),
-                Todo(4, "阅读技术书籍", false, "学习", "本周"),
-                Todo(5, "整理房间", true, "生活", "昨天"),
+                Todo(
+                    id = Uuid.random().toString(),
+                    title = "完成项目文档",
+                    completed = false,
+                    category = "工作",
+                    createdAt = currentTime,
+                    updatedAt = currentTime,
+                ),
+                Todo(
+                    id = Uuid.random().toString(),
+                    title = "购买日用品",
+                    completed = false,
+                    category = "生活",
+                    createdAt = currentTime,
+                    updatedAt = currentTime,
+                ),
+                Todo(
+                    id = Uuid.random().toString(),
+                    title = "锻炼30分钟",
+                    completed = true,
+                    category = "健康",
+                    createdAt = currentTime,
+                    updatedAt = currentTime,
+                ),
+                Todo(
+                    id = Uuid.random().toString(),
+                    title = "阅读技术书籍",
+                    completed = false,
+                    category = "学习",
+                    createdAt = currentTime,
+                    updatedAt = currentTime,
+                ),
+                Todo(
+                    id = Uuid.random().toString(),
+                    title = "整理房间",
+                    completed = true,
+                    category = "生活",
+                    createdAt = currentTime,
+                    updatedAt = currentTime,
+                ),
             )
         )
     }
     
     val pendingTodos = todos.filter { !it.completed }
     val completedTodos = todos.filter { it.completed }
-    
-    // 用于生成新待办 ID
-    var nextId by remember { mutableStateOf(6) }
     
     Column(
         modifier = modifier
@@ -76,10 +114,13 @@ fun TodoScreen(
             actionContentDescription = "添加待办",
             onAction = {
                 // 添加新待办
+                val createTime = TimeUtils.now()
                 val newTodo = Todo(
-                    id = nextId++,
+                    id = Uuid.random().toString(),
                     title = "新待办事项",
                     completed = false,
+                    createdAt = createTime,
+                    updatedAt = createTime,
                 )
                 todos = todos + newTodo
             },
@@ -108,12 +149,15 @@ fun TodoScreen(
                             modifier = Modifier.padding(start = AppTheme.spacing.xs),
                         )
                     }
-                    items(pendingTodos) { todo ->
+                    items(pendingTodos, key = { it.id }) { todo ->
                         TodoItemCard(
                             todo = todo,
                             onToggle = { id ->
                                 todos = todos.map {
-                                    if (it.id == id) it.copy(completed = !it.completed) else it
+                                    if (it.id == id) it.copy(
+                                        completed = !it.completed,
+                                        updatedAt = TimeUtils.now(),
+                                    ) else it
                                 }
                             },
                         )
@@ -129,12 +173,15 @@ fun TodoScreen(
                             modifier = Modifier.padding(start = AppTheme.spacing.xs),
                         )
                     }
-                    items(completedTodos) { todo ->
+                    items(completedTodos, key = { it.id }) { todo ->
                         TodoItemCard(
                             todo = todo,
                             onToggle = { id ->
                                 todos = todos.map {
-                                    if (it.id == id) it.copy(completed = !it.completed) else it
+                                    if (it.id == id) it.copy(
+                                        completed = !it.completed,
+                                        updatedAt = TimeUtils.now(),
+                                    ) else it
                                 }
                             },
                         )
@@ -148,7 +195,7 @@ fun TodoScreen(
 @Composable
 private fun TodoItemCard(
     todo: Todo,
-    onToggle: (Int) -> Unit,
+    onToggle: (String) -> Unit,
 ) {
     JotterCard {
         Row(
@@ -180,21 +227,24 @@ private fun TodoItemCard(
                         TextDecoration.None
                     },
                 )
-                Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
-                Row {
-                    if (todo.category != null) {
-                        Text(
-                            text = todo.category,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.primary,
-                        )
-                    }
-                    if (todo.dueDate != null) {
-                        Text(
-                            text = if (todo.category != null) " · ${todo.dueDate}" else todo.dueDate,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onBackgroundVariant,
-                        )
+                if (todo.category != null || todo.description.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
+                    Row {
+                        if (todo.category != null) {
+                            Text(
+                                text = todo.category,
+                                style = MiuixTheme.textStyles.footnote1,
+                                color = MiuixTheme.colorScheme.primary,
+                            )
+                        }
+                        if (todo.description.isNotEmpty()) {
+                            val prefix = if (todo.category != null) " · " else ""
+                            Text(
+                                text = "$prefix${todo.description}",
+                                style = MiuixTheme.textStyles.footnote1,
+                                color = MiuixTheme.colorScheme.onBackgroundVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -230,4 +280,3 @@ private fun EmptyTodoState(modifier: Modifier = Modifier) {
         )
     }
 }
-

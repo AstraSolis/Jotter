@@ -42,8 +42,8 @@ private val CardShape = RoundedCornerShape(16)
 @Composable
 fun TodayTodoCard(
     todos: List<Todo>,
-    onTodoClick: (Int) -> Unit,
-    onToggle: (Int) -> Unit,
+    onTodoClick: (String) -> Unit,
+    onToggle: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
