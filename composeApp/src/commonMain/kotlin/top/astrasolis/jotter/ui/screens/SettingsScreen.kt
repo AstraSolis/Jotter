@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.astrasolis.jotter.data.AppContainer
+import top.astrasolis.jotter.ui.components.PlatformBackHandler
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.ui.theme.pressScale
 import top.yukonga.miuix.kmp.basic.Card
@@ -69,6 +70,11 @@ fun SettingsScreen(
     onSubPageChange: (Boolean) -> Unit = {},
 ) {
     var currentRoute by remember { mutableStateOf(SettingsRoute.MAIN) }
+    
+    // 处理系统返回键（仅在二级菜单时拦截）
+    PlatformBackHandler(enabled = currentRoute != SettingsRoute.MAIN) {
+        currentRoute = SettingsRoute.MAIN
+    }
     
     // 当路由变化时通知外层
     LaunchedEffect(currentRoute) {
