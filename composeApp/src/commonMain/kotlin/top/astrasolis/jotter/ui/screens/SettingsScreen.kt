@@ -41,6 +41,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.astrasolis.jotter.data.AppContainer
+import top.astrasolis.jotter.i18n.Language
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.PlatformBackHandler
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.ui.theme.pressScale
@@ -73,6 +75,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     onSubPageChange: (Boolean) -> Unit = {},
     onShowSetupScreen: () -> Unit = {},
+    onLanguageChange: (Language) -> Unit = {},
 ) {
     var currentRoute by remember { mutableStateOf(SettingsRoute.MAIN) }
     
@@ -121,6 +124,7 @@ fun SettingsScreen(
                 SettingsRoute.APPEARANCE -> AppearanceSettingsPage(
                     innerPadding = innerPadding,
                     onBack = { currentRoute = SettingsRoute.MAIN },
+                    onLanguageChange = onLanguageChange,
                 )
                 SettingsRoute.DATA -> DataSettingsPage(
                     innerPadding = innerPadding,
@@ -190,7 +194,7 @@ private fun MainSettingsPage(
     ) {
         // 页面标题
         Text(
-            text = "设置",
+            text = strings.settingsTitle,
             style = MiuixTheme.textStyles.title1,
             color = MiuixTheme.colorScheme.onBackground,
             modifier = Modifier.padding(
@@ -200,14 +204,14 @@ private fun MainSettingsPage(
         )
         
         // 界面设置分组
-        SmallTitle(text = "界面设置")
+        SmallTitle(text = strings.settingsUiGroup)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "外观",
+                title = strings.settingsAppearance,
                 summary = null,
                 leftAction = {
                     Row {
@@ -227,14 +231,14 @@ private fun MainSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 数据管理分组
-        SmallTitle(text = "数据管理")
+        SmallTitle(text = strings.settingsDataGroup)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "存储",
+                title = strings.settingsStorage,
                 summary = null,
                 leftAction = {
                     Row {
@@ -254,14 +258,14 @@ private fun MainSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 更多分组
-        SmallTitle(text = "更多")
+        SmallTitle(text = strings.settingsMoreGroup)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "关于",
+                title = strings.settingsAbout,
                 summary = "1.0.0",
                 leftAction = {
                     Row {
@@ -280,7 +284,7 @@ private fun MainSettingsPage(
             // 开发者工具（仅在启用时显示）
             if (isDeveloperModeEnabled) {
                 SuperArrow(
-                    title = "开发者工具",
+                    title = strings.settingsDeveloperTools,
                     summary = null,
                     leftAction = {
                         Row {
@@ -309,11 +313,26 @@ private fun MainSettingsPage(
 private fun AppearanceSettingsPage(
     innerPadding: PaddingValues,
     onBack: () -> Unit,
+    onLanguageChange: (Language) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scope = rememberCoroutineScope()
+    
     // 主题选项
-    val themeOptions = remember { listOf("浅色模式", "深色模式", "跟随系统") }
+    val themeOptions = listOf(
+        strings.settingsThemeLight,
+        strings.settingsThemeDark,
+        strings.settingsThemeSystem,
+    )
     var selectedThemeIndex by remember { mutableIntStateOf(2) } // 默认跟随系统
+    
+    // 语言选项
+    val languageOptions = Language.entries.map { it.displayName }
+    var selectedLanguageIndex by remember { 
+        mutableIntStateOf(
+            Language.entries.indexOf(AppContainer.settingsRepository.getLanguage())
+        ) 
+    }
     
     Column(
         modifier = modifier
@@ -322,24 +341,48 @@ private fun AppearanceSettingsPage(
             .verticalScroll(rememberScrollState()),
     ) {
         // 返回标题栏
-        SettingsTopBar(title = "外观", onBack = onBack)
+        SettingsTopBar(title = strings.settingsAppearance, onBack = onBack)
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
         
         // 主题选择
-        SmallTitle(text = "主题")
+        SmallTitle(text = strings.settingsTheme)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperDropdown(
-                title = "主题模式",
+                title = strings.settingsThemeMode,
                 items = themeOptions,
                 selectedIndex = selectedThemeIndex,
                 onSelectedIndexChange = { index ->
                     selectedThemeIndex = index
                     // TODO: 保存主题设置
+                },
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
+        
+        // 语言选择
+        SmallTitle(text = strings.settingsLanguage)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppTheme.spacing.screenH),
+        ) {
+            SuperDropdown(
+                title = strings.settingsLanguage,
+                items = languageOptions,
+                selectedIndex = selectedLanguageIndex,
+                onSelectedIndexChange = { index ->
+                    selectedLanguageIndex = index
+                    val newLanguage = Language.entries[index]
+                    scope.launch {
+                        AppContainer.settingsRepository.setLanguage(newLanguage)
+                        onLanguageChange(newLanguage)
+                    }
                 },
             )
         }
@@ -369,19 +412,19 @@ private fun DataSettingsPage(
             .verticalScroll(rememberScrollState()),
     ) {
         // 返回标题栏
-        SettingsTopBar(title = "存储", onBack = onBack)
+        SettingsTopBar(title = strings.settingsStorage, onBack = onBack)
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
         
         // 存储位置
-        SmallTitle(text = "存储位置")
+        SmallTitle(text = strings.settingsStorage)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "数据目录",
+                title = strings.settingsDataDir,
                 summary = currentDataPath,
                 leftAction = {
                     Icon(
@@ -413,20 +456,20 @@ private fun DataSettingsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 备份与恢复
-        SmallTitle(text = "备份与恢复")
+        SmallTitle(text = strings.settingsBackupRestore)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "导出数据",
-                summary = "将数据导出为压缩包",
+                title = strings.settingsExportData,
+                summary = strings.settingsExportDataSummary,
                 onClick = { /* TODO */ },
             )
             SuperArrow(
-                title = "导入数据",
-                summary = "从压缩包恢复数据",
+                title = strings.settingsImportData,
+                summary = strings.settingsImportDataSummary,
                 onClick = { /* TODO */ },
             )
         }
@@ -456,6 +499,14 @@ private fun AboutPage(
         AppContainer.settingsRepository.isDeveloperModeEnabled() 
     }
     
+    // 提前获取字符串（用于非 @Composable 上下文）
+    val devModeActivatedMsg = strings.aboutDevModeActivated
+    // 预先生成剩余次数消息（点击3次后显示剩余2次，点击4次后显示剩余1次）
+    val clicksRemainingMsgs = mapOf(
+        2 to strings.devModeClicksRemaining(2),
+        1 to strings.devModeClicksRemaining(1),
+    )
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -463,7 +514,7 @@ private fun AboutPage(
             .verticalScroll(rememberScrollState()),
     ) {
         // 返回标题栏
-        SettingsTopBar(title = "关于", onBack = onBack)
+        SettingsTopBar(title = strings.aboutTitle, onBack = onBack)
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.xl))
         
@@ -491,7 +542,7 @@ private fun AboutPage(
             
             // 应用名称
             Text(
-                text = "Jotter",
+                text = strings.aboutAppName,
                 style = MiuixTheme.textStyles.title1,
                 color = MiuixTheme.colorScheme.onBackground,
             )
@@ -515,8 +566,8 @@ private fun AboutPage(
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             top.yukonga.miuix.kmp.basic.BasicComponent(
-                title = "Jotter",
-                summary = "一个简洁优雅的跨平台笔记应用，支持日记、待办和笔记管理。",
+                title = strings.aboutAppName,
+                summary = strings.aboutDescription,
                 onClick = if (!isAlreadyDeveloper && !devModeActivated) {
                     {
                         clickCount++
@@ -525,11 +576,11 @@ private fun AboutPage(
                             scope.launch {
                                 AppContainer.settingsRepository.setDeveloperModeEnabled(true)
                                 devModeActivated = true
-                                onShowToast("开发者模式已激活")
+                                onShowToast(devModeActivatedMsg)
                             }
                         } else if (clickCount >= 3) {
                             // 显示剩余次数提示
-                            onShowToast("再点 ${5 - clickCount} 次激活开发者模式")
+                            clicksRemainingMsgs[5 - clickCount]?.let { onShowToast(it) }
                         }
                     }
                 } else null,
@@ -539,7 +590,7 @@ private fun AboutPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 项目链接
-        SmallTitle(text = "项目链接")
+        SmallTitle(text = strings.aboutProjectLinks)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -547,7 +598,7 @@ private fun AboutPage(
         ) {
             val uriHandler = LocalUriHandler.current
             SuperArrow(
-                title = "GitHub",
+                title = strings.aboutGitHub,
                 summary = "https://github.com/AstraSolis/Jotter",
                 onClick = { 
                     uriHandler.openUri("https://github.com/AstraSolis/Jotter")
@@ -582,7 +633,7 @@ private fun SettingsTopBar(
         // 返回按钮
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "返回",
+            contentDescription = strings.back,
             modifier = Modifier
                 .size(24.dp)
                 .pressScale(onClick = onBack),
@@ -619,6 +670,10 @@ private fun DeveloperToolsPage(
     // 操作状态
     var showResetConfirm by remember { mutableStateOf(false) }
     
+    // 提前获取字符串（用于非 @Composable 上下文）
+    val devModeDisabledMsg = strings.devToolsDevModeDisabled
+    val resetSettingsDoneMsg = strings.devToolsResetSettingsDone
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -626,20 +681,20 @@ private fun DeveloperToolsPage(
             .verticalScroll(rememberScrollState()),
     ) {
         // 返回标题栏
-        SettingsTopBar(title = "开发者工具", onBack = onBack)
+        SettingsTopBar(title = strings.devToolsTitle, onBack = onBack)
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
         
         // 调试功能
-        SmallTitle(text = "调试功能")
+        SmallTitle(text = strings.devToolsDebug)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "显示首次启动引导页",
-                summary = "立即显示引导页流程",
+                title = strings.devToolsShowSetup,
+                summary = strings.devToolsShowSetupSummary,
                 leftAction = {
                     Row {
                         Icon(
@@ -657,8 +712,8 @@ private fun DeveloperToolsPage(
             )
             
             SuperArrow(
-                title = "重置所有设置",
-                summary = "将设置恢复为默认值",
+                title = strings.devToolsResetSettings,
+                summary = strings.devToolsResetSettingsSummary,
                 leftAction = {
                     Row {
                         Icon(
@@ -679,7 +734,7 @@ private fun DeveloperToolsPage(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 存储信息
-        SmallTitle(text = "存储信息")
+        SmallTitle(text = strings.devToolsStorageInfo)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -688,20 +743,20 @@ private fun DeveloperToolsPage(
             Column(
                 modifier = Modifier.padding(AppTheme.spacing.lg),
             ) {
-                StorageInfoItem("数据目录", storageInfo.dataPath)
+                StorageInfoItem(strings.devToolsDataDir, storageInfo.dataPath)
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
-                StorageInfoItem("日记数量", "${storageInfo.journalCount} 篇")
+                StorageInfoItem(strings.devToolsJournalCount, strings.countPieces(storageInfo.journalCount))
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
-                StorageInfoItem("笔记数量", "${storageInfo.noteCount} 篇")
+                StorageInfoItem(strings.devToolsNoteCount, strings.countPieces(storageInfo.noteCount))
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
-                StorageInfoItem("待办数量", "${storageInfo.todoCount} 条")
+                StorageInfoItem(strings.devToolsTodoCount, strings.countItems(storageInfo.todoCount))
             }
         }
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 版本信息
-        SmallTitle(text = "版本信息")
+        SmallTitle(text = strings.devToolsVersionInfo)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -710,26 +765,26 @@ private fun DeveloperToolsPage(
             Column(
                 modifier = Modifier.padding(AppTheme.spacing.lg),
             ) {
-                StorageInfoItem("应用版本", "1.0.0")
+                StorageInfoItem(strings.devToolsAppVersion, "1.0.0")
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
-                StorageInfoItem("构建类型", "Debug")
+                StorageInfoItem(strings.devToolsBuildType, "Debug")
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
-                StorageInfoItem("平台", getPlatformName())
+                StorageInfoItem(strings.devToolsPlatform, getPlatformName())
             }
         }
         
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         // 关闭开发者模式
-        SmallTitle(text = "开发者模式")
+        SmallTitle(text = strings.devToolsDevMode)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppTheme.spacing.screenH),
         ) {
             SuperArrow(
-                title = "关闭开发者模式",
-                summary = "隐藏开发者工具入口",
+                title = strings.devToolsDisableDevMode,
+                summary = strings.devToolsDisableDevModeSummary,
                 leftAction = {
                     Row {
                         Icon(
@@ -744,7 +799,7 @@ private fun DeveloperToolsPage(
                 onClick = {
                     scope.launch {
                         AppContainer.settingsRepository.setDeveloperModeEnabled(false)
-                        onShowToast("开发者模式已关闭")
+                        onShowToast(devModeDisabledMsg)
                         onBack()
                     }
                 },
@@ -758,7 +813,7 @@ private fun DeveloperToolsPage(
             // 简单处理：直接执行重置
             LaunchedEffect(Unit) {
                 AppContainer.settingsRepository.resetAllSettings()
-                onShowToast("已重置所有设置")
+                onShowToast(resetSettingsDoneMsg)
                 showResetConfirm = false
             }
         }

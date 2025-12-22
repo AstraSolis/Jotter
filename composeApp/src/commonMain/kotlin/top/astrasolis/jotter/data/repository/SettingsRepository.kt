@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 import okio.Path
 import top.astrasolis.jotter.data.model.AppSettings
 import top.astrasolis.jotter.data.model.AppState
+import top.astrasolis.jotter.i18n.Language
 import top.astrasolis.jotter.platform.PlatformFileSystem
 import top.astrasolis.jotter.platform.toPath
 
@@ -145,6 +146,20 @@ class SettingsRepository(
     fun resetAllSettings() {
         saveSettings(AppSettings())
     }
+    
+    /**
+     * 获取当前语言设置
+     */
+    fun getLanguage(): Language = loadSettings().language
+    
+    /**
+     * 设置应用语言
+     */
+    fun setLanguage(language: Language) {
+        val settings = loadSettings()
+        saveSettings(settings.copy(language = language))
+    }
+
     
     /**
      * 获取存储统计信息

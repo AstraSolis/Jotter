@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.JotterCard
 import top.astrasolis.jotter.ui.components.PageTitleBar
 import top.astrasolis.jotter.ui.theme.AppTheme
@@ -59,9 +60,9 @@ fun NotesScreen(
     ) {
         // 页面标题栏 + 添加按钮
         PageTitleBar(
-            title = "笔记",
+            title = strings.notesTitle,
             actionIcon = Icons.Default.Add,
-            actionContentDescription = "新建笔记",
+            actionContentDescription = strings.notesAdd,
             onAction = {
                 // TODO: 打开新建笔记页面
             },
@@ -166,13 +167,13 @@ private fun EmptyNotesState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         Text(
-            text = "还没有笔记",
+            text = strings.notesEmpty,
             style = MiuixTheme.textStyles.title2,
             color = MiuixTheme.colorScheme.onBackground,
         )
         Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
         Text(
-            text = "点击右下角按钮创建新笔记",
+            text = strings.notesEmptyHint,
             style = MiuixTheme.textStyles.body1,
             color = MiuixTheme.colorScheme.onBackgroundVariant,
         )

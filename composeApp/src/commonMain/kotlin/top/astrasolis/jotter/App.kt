@@ -18,6 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.astrasolis.jotter.data.AppContainer
+import top.astrasolis.jotter.i18n.Language
+import top.astrasolis.jotter.i18n.StringsProvider
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.navigation.NavigationRoute
 import top.astrasolis.jotter.ui.screens.HomeScreen
 import top.astrasolis.jotter.ui.screens.JournalScreen
@@ -46,40 +49,50 @@ private enum class AppState {
  */
 @Composable
 fun App() {
-    JotterTheme {
-        var appState by remember { mutableStateOf(AppState.LOADING) }
-        
-        // 检查应用状态
-        LaunchedEffect(Unit) {
-            appState = if (AppContainer.isFirstLaunch()) {
-                AppState.SETUP
-            } else {
-                // 初始化数据目录
-                AppContainer.initialize()
-                AppState.MAIN
-            }
-        }
-        
-        when (appState) {
-            AppState.LOADING -> {
-                // 加载中，可以显示 splash screen
-                // 目前留空，因为检查很快
+    // 应用语言状态
+    var currentLanguage by remember { 
+        mutableStateOf(AppContainer.settingsRepository.getLanguage()) 
+    }
+    
+    StringsProvider(language = currentLanguage) {
+        JotterTheme {
+            var appState by remember { mutableStateOf(AppState.LOADING) }
+            
+            // 检查应用状态
+            LaunchedEffect(Unit) {
+                appState = if (AppContainer.isFirstLaunch()) {
+                    AppState.SETUP
+                } else {
+                    // 初始化数据目录
+                    AppContainer.initialize()
+                    AppState.MAIN
+                }
             }
             
-            AppState.SETUP -> {
-                SetupScreen(
-                    onSetupComplete = {
-                        appState = AppState.MAIN
-                    }
-                )
-            }
-            
-            AppState.MAIN -> {
-                MainContent(
-                    onShowSetupScreen = {
-                        appState = AppState.SETUP
-                    }
-                )
+            when (appState) {
+                AppState.LOADING -> {
+                    // 加载中，可以显示 splash screen
+                    // 目前留空，因为检查很快
+                }
+                
+                AppState.SETUP -> {
+                    SetupScreen(
+                        onSetupComplete = {
+                            appState = AppState.MAIN
+                        }
+                    )
+                }
+                
+                AppState.MAIN -> {
+                    MainContent(
+                        onShowSetupScreen = {
+                            appState = AppState.SETUP
+                        },
+                        onLanguageChange = { language ->
+                            currentLanguage = language
+                        },
+                    )
+                }
             }
         }
     }
@@ -91,17 +104,16 @@ fun App() {
 @Composable
 private fun MainContent(
     onShowSetupScreen: () -> Unit = {},
+    onLanguageChange: (Language) -> Unit = {},
 ) {
-    // 导航项列表
-    val navigationItems = remember {
-        listOf(
-            NavigationItem("首页", Icons.Default.Home),
-            NavigationItem("日记", Icons.Default.DateRange),
-            NavigationItem("待办", Icons.Default.CheckCircle),
-            NavigationItem("笔记", Icons.Outlined.Edit),
-            NavigationItem("设置", Icons.Default.Settings),
-        )
-    }
+    // 导航项列表 - 使用国际化字符串
+    val navigationItems = listOf(
+        NavigationItem(strings.navHome, Icons.Default.Home),
+        NavigationItem(strings.navJournal, Icons.Default.DateRange),
+        NavigationItem(strings.navTodo, Icons.Default.CheckCircle),
+        NavigationItem(strings.navNotes, Icons.Outlined.Edit),
+        NavigationItem(strings.navSettings, Icons.Default.Settings),
+    )
     
     // 路由映射
     val routes = remember {
@@ -165,6 +177,7 @@ private fun MainContent(
                         showBottomBar = !inSubPage
                     },
                     onShowSetupScreen = onShowSetupScreen,
+                    onLanguageChange = onLanguageChange,
                 )
             }
         }

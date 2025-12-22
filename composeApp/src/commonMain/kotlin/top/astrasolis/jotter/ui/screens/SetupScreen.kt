@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import okio.Path
 import top.astrasolis.jotter.data.AppContainer
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
@@ -54,6 +55,10 @@ fun SetupScreen(
     var selectedPath by remember { mutableStateOf<Path?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    
+    // 提前获取字符串（用于非 @Composable 上下文）
+    val selectDirErrorMsg = strings.setupSelectDirError
+    val initErrorMsg = strings.setupInitError
     
     Box(
         modifier = modifier.fillMaxSize(),
@@ -107,7 +112,7 @@ fun SetupScreen(
                                     selectedPath = AppContainer.fileSystem.getDefaultDataDir()
                                 }
                             } catch (e: Exception) {
-                                errorMessage = "选择目录时发生错误: ${e.message}"
+                                errorMessage = selectDirErrorMsg + ": ${e.message}"
                             } finally {
                                 isLoading = false
                             }
@@ -151,7 +156,7 @@ fun SetupScreen(
                                 // 完成设置
                                 onSetupComplete()
                             } catch (e: Exception) {
-                                errorMessage = "初始化失败: ${e.message}"
+                                errorMessage = initErrorMsg + ": ${e.message}"
                             } finally {
                                 isLoading = false
                             }
@@ -258,7 +263,7 @@ private fun WelcomeContent(
         Spacer(modifier = Modifier.height(AppTheme.spacing.xl))
         
         Text(
-            text = "欢迎使用 Jotter",
+            text = strings.setupWelcome,
             style = MiuixTheme.textStyles.title1,
             color = MiuixTheme.colorScheme.onBackground,
         )
@@ -266,7 +271,7 @@ private fun WelcomeContent(
         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
         
         Text(
-            text = "一个简洁的日记、待办和笔记应用",
+            text = strings.setupWelcomeSubtitle,
             style = MiuixTheme.textStyles.body1,
             color = MiuixTheme.colorScheme.onBackgroundVariant,
             textAlign = TextAlign.Center,
@@ -280,9 +285,9 @@ private fun WelcomeContent(
             Column(
                 modifier = Modifier.padding(AppTheme.spacing.lg),
             ) {
-                FeatureItem("📝", "日记", "记录每一天的所思所想")
-                FeatureItem("✅", "待办", "管理日常任务和目标")
-                FeatureItem("📒", "笔记", "随时随地记录灵感")
+                FeatureItem("📝", strings.setupFeatureJournal, strings.setupFeatureJournalDesc)
+                FeatureItem("✅", strings.setupFeatureTodo, strings.setupFeatureTodoDesc)
+                FeatureItem("📒", strings.setupFeatureNotes, strings.setupFeatureNotesDesc)
             }
         }
         
@@ -292,7 +297,7 @@ private fun WelcomeContent(
             onClick = onNext,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Text(text = "开始设置")
+            Text(text = strings.setupStart)
         }
     }
 }
@@ -360,7 +365,7 @@ private fun StorageContent(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         Text(
-            text = "选择数据存储位置",
+            text = strings.setupSelectStorage,
             style = MiuixTheme.textStyles.title2,
             color = MiuixTheme.colorScheme.onBackground,
         )
@@ -368,7 +373,7 @@ private fun StorageContent(
         Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
         
         Text(
-            text = "您的日记、笔记和待办事项将保存在此位置",
+            text = strings.setupStorageHint,
             style = MiuixTheme.textStyles.body1,
             color = MiuixTheme.colorScheme.onBackgroundVariant,
             textAlign = TextAlign.Center,
@@ -384,7 +389,7 @@ private fun StorageContent(
                 modifier = Modifier.padding(AppTheme.spacing.lg),
             ) {
                 Text(
-                    text = "存储位置",
+                    text = strings.setupStorageLocation,
                     style = MiuixTheme.textStyles.subtitle,
                     color = MiuixTheme.colorScheme.onBackgroundVariant,
                 )
@@ -392,7 +397,7 @@ private fun StorageContent(
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
                 
                 Text(
-                    text = selectedPath?.toString() ?: "未选择",
+                    text = selectedPath?.toString() ?: strings.setupNotSelected,
                     style = MiuixTheme.textStyles.body1,
                     color = if (selectedPath != null) 
                         MiuixTheme.colorScheme.onBackground 
@@ -428,11 +433,11 @@ private fun StorageContent(
                         onClick = onPickDirectory,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(text = "选择目录")
+                        Text(text = strings.setupSelectDir)
                     }
                     
                     TextButton(
-                        text = "使用默认位置",
+                        text = strings.setupUseDefault,
                         onClick = onUseDefault,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -441,11 +446,11 @@ private fun StorageContent(
                         onClick = onUseDefault,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(text = "使用默认位置")
+                        Text(text = strings.setupUseDefault)
                     }
                     
                     Text(
-                        text = "当前平台不支持自定义目录选择",
+                        text = strings.setupDirNotSupported,
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onBackgroundVariant,
                         textAlign = TextAlign.Center,
@@ -463,7 +468,7 @@ private fun StorageContent(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             TextButton(
-                text = "返回",
+                text = strings.setupBack,
                 onClick = onBack,
             )
             
@@ -471,7 +476,7 @@ private fun StorageContent(
                 onClick = onNext,
                 enabled = selectedPath != null,
             ) {
-                Text(text = "下一步")
+                Text(text = strings.setupNext)
             }
         }
     }
@@ -503,7 +508,7 @@ private fun ConfirmContent(
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         
         Text(
-            text = "确认设置",
+            text = strings.setupConfirm,
             style = MiuixTheme.textStyles.title2,
             color = MiuixTheme.colorScheme.onBackground,
         )
@@ -517,7 +522,7 @@ private fun ConfirmContent(
                 modifier = Modifier.padding(AppTheme.spacing.lg),
             ) {
                 Text(
-                    text = "数据将保存至",
+                    text = strings.setupDataSaveTo,
                     style = MiuixTheme.textStyles.subtitle,
                     color = MiuixTheme.colorScheme.onBackgroundVariant,
                 )
@@ -533,7 +538,7 @@ private fun ConfirmContent(
                 Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
                 
                 Text(
-                    text = "将创建以下目录结构：",
+                    text = strings.setupDirStructure,
                     style = MiuixTheme.textStyles.subtitle,
                     color = MiuixTheme.colorScheme.onBackgroundVariant,
                 )
@@ -541,10 +546,10 @@ private fun ConfirmContent(
                 Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
                 
                 Column {
-                    DirectoryItem("📁 journals/", "日记文件 (Markdown)")
-                    DirectoryItem("📁 notes/", "笔记文件 (Markdown)")
-                    DirectoryItem("📁 todos/", "待办事项 (JSON)")
-                    DirectoryItem("📁 config/", "配置文件 (JSON)")
+                    DirectoryItem("📁 journals/", strings.setupDirJournals)
+                    DirectoryItem("📁 notes/", strings.setupDirNotes)
+                    DirectoryItem("📁 todos/", strings.setupDirTodos)
+                    DirectoryItem("📁 config/", strings.setupDirConfig)
                 }
             }
         }
@@ -572,14 +577,14 @@ private fun ConfirmContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 TextButton(
-                    text = "返回",
+                    text = strings.setupBack,
                     onClick = onBack,
                 )
                 
                 Button(
                     onClick = onConfirm,
                 ) {
-                    Text(text = "完成设置")
+                    Text(text = strings.setupComplete)
                 }
             }
         }

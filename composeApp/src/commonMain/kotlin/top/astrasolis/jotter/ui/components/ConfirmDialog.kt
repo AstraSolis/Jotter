@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -23,12 +24,15 @@ fun ConfirmDialog(
     show: MutableState<Boolean>,
     title: String,
     message: String,
-    confirmText: String = "确定",
-    cancelText: String = "取消",
+    confirmText: String? = null,
+    cancelText: String? = null,
     onConfirm: () -> Unit,
     onCancel: () -> Unit = {},
     isDangerous: Boolean = false,
 ) {
+    val actualConfirmText = confirmText ?: strings.confirm
+    val actualCancelText = cancelText ?: strings.cancel
+    
     SuperDialog(
         title = title,
         summary = message,
@@ -41,7 +45,7 @@ fun ConfirmDialog(
         Row(modifier = Modifier.fillMaxWidth()) {
             // 取消按钮
             TextButton(
-                text = cancelText,
+                text = actualCancelText,
                 onClick = {
                     show.value = false
                     onCancel()
@@ -64,7 +68,7 @@ fun ConfirmDialog(
                     ButtonDefaults.buttonColors()
                 },
             ) {
-                Text(text = confirmText)
+                Text(text = actualConfirmText)
             }
         }
     }
@@ -83,10 +87,10 @@ fun DeleteConfirmDialog(
 ) {
     ConfirmDialog(
         show = show,
-        title = "删除确认",
-        message = "确定要删除「$itemName」吗？此操作无法撤销。",
-        confirmText = "删除",
-        cancelText = "取消",
+        title = strings.dialogDeleteTitle,
+        message = strings.dialogDeleteMessage(itemName),
+        confirmText = strings.dialogDeleteConfirm,
+        cancelText = strings.cancel,
         onConfirm = onConfirm,
         onCancel = onCancel,
         isDangerous = true,

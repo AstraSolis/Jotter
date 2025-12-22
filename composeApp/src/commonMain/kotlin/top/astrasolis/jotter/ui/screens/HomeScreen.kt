@@ -26,6 +26,7 @@ import top.astrasolis.jotter.ui.components.DateDisplayWidget
 import top.astrasolis.jotter.ui.components.QuoteDisplayWidget
 import top.astrasolis.jotter.ui.components.TodayTodoCard
 import top.astrasolis.jotter.data.Todo
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.navigation.NavigationRoute
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.utils.DateUtils
@@ -55,12 +56,12 @@ fun HomeScreen(
 ) {
     // 动态获取当前日期
     val today = remember { DateUtils.today() }
-    val dateText = remember(today) { DateUtils.formatDateChinese(today) }
-    val dayOfWeekText = remember(today) { DateUtils.getDayOfWeekChinese(today) }
+    val dateText = strings.formatDate(today.year, today.month.ordinal + 1, today.dayOfMonth)
+    val dayOfWeekText = strings.getDayOfWeek(today.dayOfWeek.ordinal + 1)
     
     // 一言
-    val quote = remember { "每一个不曾起舞的日子，\n都是对生命的辜负。" }
-    val quoteSource = remember { "尼采" }
+    val quote = strings.homeQuoteDefault
+    val quoteSource = strings.homeQuoteSource
     
     // 今日待办
     val currentTime = remember { TimeUtils.now() }

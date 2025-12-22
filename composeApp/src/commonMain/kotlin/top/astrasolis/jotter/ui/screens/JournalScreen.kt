@@ -21,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.JotterCard
 import top.astrasolis.jotter.ui.components.PageTitleBar
 import top.astrasolis.jotter.ui.theme.AppTheme
@@ -53,9 +54,9 @@ fun JournalScreen(
     ) {
         // 页面标题栏 + 添加按钮
         PageTitleBar(
-            title = "日记",
+            title = strings.journalTitle,
             actionIcon = Icons.Default.Add,
-            actionContentDescription = "写日记",
+            actionContentDescription = strings.journalAdd,
             onAction = {
                 // TODO: 打开新建日记页面
             },
@@ -146,13 +147,13 @@ private fun EmptyJournalState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         Text(
-            text = "还没有日记",
+            text = strings.journalEmpty,
             style = MiuixTheme.textStyles.title2,
             color = MiuixTheme.colorScheme.onBackground,
         )
         Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
         Text(
-            text = "点击右下角按钮开始记录今天",
+            text = strings.journalEmptyHint,
             style = MiuixTheme.textStyles.body1,
             color = MiuixTheme.colorScheme.onBackgroundVariant,
         )

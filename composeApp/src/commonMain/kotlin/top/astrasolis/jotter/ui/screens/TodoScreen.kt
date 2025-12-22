@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import top.astrasolis.jotter.data.Todo
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.JotterCard
 import top.astrasolis.jotter.ui.components.PageTitleBar
 import top.astrasolis.jotter.ui.components.SmallTitle
@@ -102,6 +103,9 @@ fun TodoScreen(
     val pendingTodos = todos.filter { !it.completed }
     val completedTodos = todos.filter { it.completed }
     
+    // 提前获取字符串（用于非 @Composable 上下文）
+    val newItemTitle = strings.todoNewItem
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -109,15 +113,15 @@ fun TodoScreen(
     ) {
         // 页面标题栏 + 添加按钮
         PageTitleBar(
-            title = "待办事项",
+            title = strings.todoTitle,
             actionIcon = Icons.Default.Add,
-            actionContentDescription = "添加待办",
+            actionContentDescription = strings.todoAdd,
             onAction = {
                 // 添加新待办
                 val createTime = TimeUtils.now()
                 val newTodo = Todo(
                     id = Uuid.random().toString(),
-                    title = "新待办事项",
+                    title = newItemTitle,
                     completed = false,
                     createdAt = createTime,
                     updatedAt = createTime,
@@ -145,7 +149,7 @@ fun TodoScreen(
                 if (pendingTodos.isNotEmpty()) {
                     item {
                         SmallTitle(
-                            text = "待完成 (${pendingTodos.size})",
+                            text = strings.todoPendingCount(pendingTodos.size),
                             modifier = Modifier.padding(start = AppTheme.spacing.xs),
                         )
                     }
@@ -169,7 +173,7 @@ fun TodoScreen(
                     item {
                         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
                         SmallTitle(
-                            text = "已完成 (${completedTodos.size})",
+                            text = strings.todoCompletedCount(completedTodos.size),
                             modifier = Modifier.padding(start = AppTheme.spacing.xs),
                         )
                     }
@@ -268,13 +272,13 @@ private fun EmptyTodoState(modifier: Modifier = Modifier) {
         )
         Spacer(modifier = Modifier.height(AppTheme.spacing.lg))
         Text(
-            text = "还没有待办事项",
+            text = strings.todoEmpty,
             style = MiuixTheme.textStyles.title2,
             color = MiuixTheme.colorScheme.onBackground,
         )
         Spacer(modifier = Modifier.height(AppTheme.spacing.sm))
         Text(
-            text = "点击右下角按钮添加新任务",
+            text = strings.todoEmptyHint,
             style = MiuixTheme.textStyles.body1,
             color = MiuixTheme.colorScheme.onBackgroundVariant,
         )

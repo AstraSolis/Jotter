@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -34,8 +35,9 @@ fun FloatingActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector = Icons.Default.Add,
-    contentDescription: String? = "添加",
+    contentDescription: String? = null,
 ) {
+    val actualContentDescription = contentDescription ?: strings.add
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
@@ -69,7 +71,7 @@ fun FloatingActionButton(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = contentDescription,
+            contentDescription = actualContentDescription,
             tint = MiuixTheme.colorScheme.onPrimary,
         )
     }

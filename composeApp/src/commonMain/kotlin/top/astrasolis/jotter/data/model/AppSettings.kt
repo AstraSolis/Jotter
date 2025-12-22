@@ -1,6 +1,7 @@
 package top.astrasolis.jotter.data.model
 
 import kotlinx.serialization.Serializable
+import top.astrasolis.jotter.i18n.Language
 
 /**
  * 应用设置
@@ -11,7 +12,7 @@ data class AppSettings(
     /** 主题模式 */
     val theme: Theme = Theme.SYSTEM,
     /** 语言 */
-    val language: String = "zh-CN",
+    val language: Language = Language.CHINESE,
     /** 是否显示已完成的待办 */
     val showCompletedTodos: Boolean = true,
     /** 默认待办分类 */

@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.pressScale
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -34,7 +35,7 @@ fun BackButton(
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "返回",
+            contentDescription = strings.back,
             tint = MiuixTheme.colorScheme.onBackground,
         )
     }

@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextDecoration
 import top.astrasolis.jotter.data.Todo
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Text
@@ -61,7 +62,7 @@ fun TodayTodoCard(
     ) {
         // 标题
         Text(
-            text = "今日待办",
+            text = strings.homeTodayTodo,
             style = MiuixTheme.textStyles.title3,
             color = MiuixTheme.colorScheme.onBackground,
         )
@@ -71,7 +72,7 @@ fun TodayTodoCard(
         if (todos.isEmpty()) {
             // 空状态
             Text(
-                text = "今日无待办事项",
+                text = strings.homeTodayTodoEmpty,
                 style = MiuixTheme.textStyles.body2,
                 color = MiuixTheme.colorScheme.onBackgroundVariant,
                 modifier = Modifier.padding(vertical = AppTheme.spacing.lg),
