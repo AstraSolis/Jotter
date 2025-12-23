@@ -35,13 +35,13 @@ object ChineseStrings : Strings {
     override val todoEditTitle = "编辑待办"
     override val todoTitleLabel = "待办内容"
     override val todoDescLabel = "备注（可选）"
-    override val todoReminderLabel = "提醒时间"
-    override val todoNoReminder = "无提醒"
-    override val todoSetReminder = "设置提醒"
-    override val todoClearReminder = "清除提醒"
+    override val todoReminderLabel = "时间"
+    override val todoNoReminder = "未设置"
+    override val todoSetReminder = "设置时间"
+    override val todoClearReminder = "清除"
     // 显示
     override val todoCompletedAtPrefix = "完成于"
-    override val todoReminderPrefix = "提醒"
+    override val todoReminderPrefix = ""
     override val todoOverdue = "已逾期"
     
     // ==================== 日记 ====================

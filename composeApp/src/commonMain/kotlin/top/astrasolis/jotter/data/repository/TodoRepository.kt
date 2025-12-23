@@ -64,9 +64,26 @@ class TodoRepository(
     
     /**
      * 获取今日待办
+     * - 未完成的待办：无时间则始终显示，有时间则在当天或已逾期时显示
+     * - 已完成的待办：按完成时间判断，只显示今天完成的
      */
     fun getTodayTodos(): List<Todo> {
-        return getTodosByDate(TimeUtils.today())
+        val today = TimeUtils.today()
+        val tz = TimeZone.currentSystemDefault()
+        return getActiveTodos().filter { todo ->
+            if (todo.completed) {
+                // 已完成：按完成时间判断
+                todo.completedAt?.let { epochMs ->
+                    Instant.fromEpochMilliseconds(epochMs)
+                        .toLocalDateTime(tz).date == today
+                } ?: false
+            } else {
+                // 未完成：无时间则始终显示，有时间则在当天或已逾期时显示
+                todo.dueDateTime == null ||
+                    Instant.fromEpochMilliseconds(todo.dueDateTime)
+                        .toLocalDateTime(tz).date <= today
+            }
+        }
     }
     
     /**

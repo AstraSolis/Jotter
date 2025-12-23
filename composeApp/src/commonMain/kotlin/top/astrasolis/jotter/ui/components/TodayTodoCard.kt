@@ -1,3 +1,4 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
 package top.astrasolis.jotter.ui.components
 
 import androidx.compose.animation.animateColorAsState
@@ -26,9 +27,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextDecoration
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import top.astrasolis.jotter.data.Todo
 import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.AppTheme
+import top.astrasolis.jotter.utils.DateUtils
 import top.yukonga.miuix.kmp.basic.Checkbox
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -97,10 +102,13 @@ fun TodayTodoCard(
 
 /**
  * 单个待办项
- * 带勾选时的柔和动画效果
+ * 带勾选时的柔和动画效果，逾期待办标红
  */
 // 待办项圆角
 private val ItemShape = RoundedCornerShape(20)
+
+// 逾期红色
+private val OverdueColor = Color(0xFFE53935)
 
 @Composable
 private fun TodayTodoItem(
@@ -108,6 +116,18 @@ private fun TodayTodoItem(
     onClick: () -> Unit,
     onToggle: () -> Unit,
 ) {
+    // 判断是否逾期
+    val today = remember { DateUtils.today() }
+    val isOverdue = remember(todo) {
+        if (todo.completed || todo.dueDateTime == null) {
+            false
+        } else {
+            val dueDate = Instant.fromEpochMilliseconds(todo.dueDateTime)
+                .toLocalDateTime(TimeZone.currentSystemDefault()).date
+            dueDate < today
+        }
+    }
+    
     // 悬停状态
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -122,7 +142,11 @@ private fun TodayTodoItem(
     // 悬停背景色动画
     val hoverBackgroundColor by animateColorAsState(
         targetValue = if (isHovered) {
-            MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
+            if (isOverdue) {
+                OverdueColor.copy(alpha = 0.08f)
+            } else {
+                MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
+            }
         } else {
             Color.Transparent
         },
@@ -131,10 +155,10 @@ private fun TodayTodoItem(
     
     // 文字颜色动画
     val textColor by animateColorAsState(
-        targetValue = if (todo.completed) {
-            MiuixTheme.colorScheme.onBackgroundVariant
-        } else {
-            MiuixTheme.colorScheme.onBackground
+        targetValue = when {
+            todo.completed -> MiuixTheme.colorScheme.onBackgroundVariant
+            isOverdue -> OverdueColor
+            else -> MiuixTheme.colorScheme.onBackground
         },
         animationSpec = spring(stiffness = 300f),
     )

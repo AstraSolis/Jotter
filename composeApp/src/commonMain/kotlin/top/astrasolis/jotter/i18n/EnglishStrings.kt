@@ -35,13 +35,13 @@ object EnglishStrings : Strings {
     override val todoEditTitle = "Edit Todo"
     override val todoTitleLabel = "Todo"
     override val todoDescLabel = "Note (optional)"
-    override val todoReminderLabel = "Reminder"
-    override val todoNoReminder = "No reminder"
-    override val todoSetReminder = "Set reminder"
+    override val todoReminderLabel = "Time"
+    override val todoNoReminder = "Not set"
+    override val todoSetReminder = "Set time"
     override val todoClearReminder = "Clear"
     // Display
     override val todoCompletedAtPrefix = "Completed"
-    override val todoReminderPrefix = "Remind"
+    override val todoReminderPrefix = ""
     override val todoOverdue = "Overdue"
     
     // ==================== Journal ====================

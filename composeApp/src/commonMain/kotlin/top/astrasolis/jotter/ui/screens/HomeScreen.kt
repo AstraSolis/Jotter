@@ -67,7 +67,7 @@ fun HomeScreen(
     var refreshTrigger by remember { mutableStateOf(0) }
     
     LaunchedEffect(refreshTrigger) {
-        todayTodos = todoRepository.getActiveTodos()
+        todayTodos = todoRepository.getTodayTodos()
     }
     
     // 刷新数据的辅助函数

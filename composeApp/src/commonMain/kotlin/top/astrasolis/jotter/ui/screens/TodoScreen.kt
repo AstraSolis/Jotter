@@ -325,7 +325,7 @@ private fun buildDateInfoText(todo: Todo, today: kotlinx.datetime.LocalDate): Da
             )
         } else {
             DateInfoText(
-                text = "${strings.todoReminderPrefix}: $dateStr $timeStr",
+                text = "$dateStr $timeStr",
                 color = MiuixTheme.colorScheme.primary,
             )
         }

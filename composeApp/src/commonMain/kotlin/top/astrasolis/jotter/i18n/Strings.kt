@@ -36,13 +36,13 @@ interface Strings {
     val todoEditTitle: String
     val todoTitleLabel: String
     val todoDescLabel: String
-    val todoReminderLabel: String  // 提醒时间
+    val todoReminderLabel: String  // 时间
     val todoNoReminder: String
     val todoSetReminder: String
     val todoClearReminder: String
     // 显示
     val todoCompletedAtPrefix: String  // "完成于"
-    val todoReminderPrefix: String  // "提醒"
+    val todoReminderPrefix: String  // 时间前缀（可为空）
     val todoOverdue: String  // "已逾期"
     
     // ==================== 日记 ====================
