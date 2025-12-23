@@ -26,10 +26,9 @@ object ChineseStrings : Strings {
     override val todoCompleted = "已完成"
     override val todoEmpty = "还没有待办事项"
     override val todoEmptyHint = "点击右下角按钮添加新任务"
-    override val todoCategoryWork = "工作"
-    override val todoCategoryLife = "生活"
-    override val todoCategoryHealth = "健康"
-    override val todoCategoryStudy = "学习"
+    override val todoTagLabel = "标签"
+    override val todoAddTag = "新建"
+    override val todoNoTag = "无"
     // 编辑对话框
     override val todoAddTitle = "添加待办"
     override val todoEditTitle = "编辑待办"

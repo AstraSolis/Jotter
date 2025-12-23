@@ -15,8 +15,8 @@ data class AppSettings(
     val language: Language = Language.CHINESE,
     /** 是否显示已完成的待办 */
     val showCompletedTodos: Boolean = true,
-    /** 默认待办分类 */
-    val defaultTodoCategory: String? = null,
+    /** 默认待办标签 */
+    val defaultTodoTag: String? = null,
     /** 每日提醒时间 (HH:mm 格式) */
     val dailyReminderTime: String? = null,
 ) {

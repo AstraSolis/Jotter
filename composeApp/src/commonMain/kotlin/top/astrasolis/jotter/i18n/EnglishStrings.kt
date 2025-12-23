@@ -26,10 +26,9 @@ object EnglishStrings : Strings {
     override val todoCompleted = "Completed"
     override val todoEmpty = "No todos yet"
     override val todoEmptyHint = "Tap the button below to add a new task"
-    override val todoCategoryWork = "Work"
-    override val todoCategoryLife = "Life"
-    override val todoCategoryHealth = "Health"
-    override val todoCategoryStudy = "Study"
+    override val todoTagLabel = "Tag"
+    override val todoAddTag = "New"
+    override val todoNoTag = "None"
     // Edit Dialog
     override val todoAddTitle = "Add Todo"
     override val todoEditTitle = "Edit Todo"

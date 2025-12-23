@@ -27,10 +27,9 @@ interface Strings {
     val todoCompleted: String
     val todoEmpty: String
     val todoEmptyHint: String
-    val todoCategoryWork: String
-    val todoCategoryLife: String
-    val todoCategoryHealth: String
-    val todoCategoryStudy: String
+    val todoTagLabel: String
+    val todoAddTag: String
+    val todoNoTag: String
     // 编辑对话框
     val todoAddTitle: String
     val todoEditTitle: String

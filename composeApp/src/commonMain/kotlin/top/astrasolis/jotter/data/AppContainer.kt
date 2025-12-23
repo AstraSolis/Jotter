@@ -3,6 +3,7 @@ package top.astrasolis.jotter.data
 import top.astrasolis.jotter.data.repository.JournalRepository
 import top.astrasolis.jotter.data.repository.NoteRepository
 import top.astrasolis.jotter.data.repository.SettingsRepository
+import top.astrasolis.jotter.data.repository.TagRepository
 import top.astrasolis.jotter.data.repository.TodoRepository
 import top.astrasolis.jotter.platform.DirectoryPicker
 import top.astrasolis.jotter.platform.PlatformFileSystem
@@ -41,6 +42,11 @@ object AppContainer {
     // 笔记仓库
     val noteRepository: NoteRepository by lazy { 
         NoteRepository(fileSystem) { settingsRepository.getDataPath() }
+    }
+    
+    // 标签仓库
+    val tagRepository: TagRepository by lazy { 
+        TagRepository(fileSystem) { settingsRepository.getDataPath() }
     }
     
     /**

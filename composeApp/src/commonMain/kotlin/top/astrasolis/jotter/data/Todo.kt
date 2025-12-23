@@ -17,8 +17,8 @@ data class Todo(
     val description: String = "",
     /** 是否已完成 */
     val completed: Boolean = false,
-    /** 分类 */
-    val category: String? = null,
+    /** 标签 */
+    val tag: String? = null,
     /** 优先级 */
     val priority: Priority = Priority.NORMAL,
     /** 提醒时间 (epoch milliseconds) */

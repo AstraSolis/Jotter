@@ -1,6 +1,7 @@
 package top.astrasolis.jotter.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -26,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -226,41 +229,51 @@ private fun TodoItemCard(
             Spacer(modifier = Modifier.width(AppTheme.spacing.md))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = todo.title,
-                    style = MiuixTheme.textStyles.body1,
-                    color = if (todo.completed) {
-                        MiuixTheme.colorScheme.onBackgroundVariant
-                    } else {
-                        MiuixTheme.colorScheme.onBackground
-                    },
-                    textDecoration = if (todo.completed) {
-                        TextDecoration.LineThrough
-                    } else {
-                        TextDecoration.None
-                    },
-                )
-                
-                // 显示描述或分类
-                if (todo.category != null || todo.description.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
-                    Row {
-                        if (todo.category != null) {
-                            Text(
-                                text = todo.category,
-                                style = MiuixTheme.textStyles.footnote1,
-                                color = MiuixTheme.colorScheme.primary,
-                            )
-                        }
-                        if (todo.description.isNotEmpty()) {
-                            val prefix = if (todo.category != null) " · " else ""
-                            Text(
-                                text = "$prefix${todo.description}",
-                                style = MiuixTheme.textStyles.footnote1,
-                                color = MiuixTheme.colorScheme.onBackgroundVariant,
-                            )
-                        }
+                // 标题行 + 标签
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = todo.title,
+                        style = MiuixTheme.textStyles.body1,
+                        color = if (todo.completed) {
+                            MiuixTheme.colorScheme.onBackgroundVariant
+                        } else {
+                            MiuixTheme.colorScheme.onBackground
+                        },
+                        textDecoration = if (todo.completed) {
+                            TextDecoration.LineThrough
+                        } else {
+                            TextDecoration.None
+                        },
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    
+                    // 标签显示在右侧
+                    if (todo.tag != null) {
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
+                        Text(
+                            text = todo.tag,
+                            style = MiuixTheme.textStyles.footnote2,
+                            color = MiuixTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                        )
                     }
+                }
+                
+                // 显示备注
+                if (todo.description.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
+                    Text(
+                        text = todo.description,
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onBackgroundVariant,
+                    )
                 }
                 
                 // 显示截止日期或完成时间
