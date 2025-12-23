@@ -30,7 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextDecoration
+
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -229,12 +229,12 @@ private fun TodoItemCard(
             Spacer(modifier = Modifier.width(AppTheme.spacing.md))
             
             Column(modifier = Modifier.weight(1f)) {
-                // 标题行 + 标签
+                // 标题行：标题 + 备注 + 标签
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    // 标题
                     Text(
                         text = todo.title,
                         style = MiuixTheme.textStyles.body1,
@@ -243,38 +243,36 @@ private fun TodoItemCard(
                         } else {
                             MiuixTheme.colorScheme.onBackground
                         },
-                        textDecoration = if (todo.completed) {
-                            TextDecoration.LineThrough
-                        } else {
-                            TextDecoration.None
-                        },
-                        modifier = Modifier.weight(1f, fill = false),
                     )
+                    
+                    // 备注显示在标题后面
+                    if (todo.description.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
+                        Text(
+                            text = todo.description,
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onBackgroundVariant,
+                            maxLines = 1,
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.weight(1f))
                     
                     // 标签显示在右侧
                     if (todo.tag != null) {
                         Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
                         Text(
                             text = todo.tag,
-                            style = MiuixTheme.textStyles.footnote2,
+                            style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.primary,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                                .padding(horizontal = 10.dp, vertical = 3.dp),
                         )
                     }
                 }
                 
-                // 显示备注
-                if (todo.description.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
-                    Text(
-                        text = todo.description,
-                        style = MiuixTheme.textStyles.footnote1,
-                        color = MiuixTheme.colorScheme.onBackgroundVariant,
-                    )
-                }
                 
                 // 显示截止日期或完成时间
                 val dateInfo = buildDateInfoText(todo, today)

@@ -26,7 +26,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.dp
+
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -181,17 +182,27 @@ private fun TodayTodoItem(
         
         Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
         
+        // 标题
         Text(
             text = todo.title,
             style = MiuixTheme.textStyles.body2,
             color = textColor,
-            textDecoration = if (todo.completed) {
-                TextDecoration.LineThrough
-            } else {
-                TextDecoration.None
-            },
             modifier = Modifier.weight(1f),
         )
+        
+        // 标签显示在右侧
+        if (todo.tag != null) {
+            Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
+            Text(
+                text = todo.tag,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
+            )
+        }
     }
 }
 
