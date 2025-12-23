@@ -30,6 +30,19 @@ object EnglishStrings : Strings {
     override val todoCategoryLife = "Life"
     override val todoCategoryHealth = "Health"
     override val todoCategoryStudy = "Study"
+    // Edit Dialog
+    override val todoAddTitle = "Add Todo"
+    override val todoEditTitle = "Edit Todo"
+    override val todoTitleLabel = "Todo"
+    override val todoDescLabel = "Note (optional)"
+    override val todoReminderLabel = "Reminder"
+    override val todoNoReminder = "No reminder"
+    override val todoSetReminder = "Set reminder"
+    override val todoClearReminder = "Clear"
+    // Display
+    override val todoCompletedAtPrefix = "Completed"
+    override val todoReminderPrefix = "Remind"
+    override val todoOverdue = "Overdue"
     
     // ==================== Journal ====================
     override val journalTitle = "Journal"
@@ -160,6 +173,11 @@ object EnglishStrings : Strings {
         return "$monthName $day, $year"
     }
     
+    override fun formatYearMonth(year: Int, month: Int): String {
+        val monthName = monthNames.getOrElse(month - 1) { "Unknown" }
+        return "$monthName $year"
+    }
+    
     override fun getDayOfWeek(dayOfWeek: Int) = when (dayOfWeek) {
         1 -> "Monday"
         2 -> "Tuesday"
@@ -168,6 +186,17 @@ object EnglishStrings : Strings {
         5 -> "Friday"
         6 -> "Saturday"
         7 -> "Sunday"
+        else -> ""
+    }
+    
+    override fun getDayOfWeekShort(dayOfWeek: Int) = when (dayOfWeek) {
+        1 -> "Mon"
+        2 -> "Tue"
+        3 -> "Wed"
+        4 -> "Thu"
+        5 -> "Fri"
+        6 -> "Sat"
+        7 -> "Sun"
         else -> ""
     }
 }

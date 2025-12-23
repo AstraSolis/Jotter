@@ -53,7 +53,13 @@ class TodoRepository(
      * 获取指定日期的待办
      */
     fun getTodosByDate(date: LocalDate): List<Todo> {
-        return getActiveTodos().filter { it.dueDate == date }
+        val tz = TimeZone.currentSystemDefault()
+        return getActiveTodos().filter { todo ->
+            todo.dueDateTime?.let { epochMs ->
+                Instant.fromEpochMilliseconds(epochMs)
+                    .toLocalDateTime(tz).date == date
+            } ?: false
+        }
     }
     
     /**

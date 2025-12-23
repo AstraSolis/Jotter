@@ -30,6 +30,19 @@ object ChineseStrings : Strings {
     override val todoCategoryLife = "生活"
     override val todoCategoryHealth = "健康"
     override val todoCategoryStudy = "学习"
+    // 编辑对话框
+    override val todoAddTitle = "添加待办"
+    override val todoEditTitle = "编辑待办"
+    override val todoTitleLabel = "待办内容"
+    override val todoDescLabel = "备注（可选）"
+    override val todoReminderLabel = "提醒时间"
+    override val todoNoReminder = "无提醒"
+    override val todoSetReminder = "设置提醒"
+    override val todoClearReminder = "清除提醒"
+    // 显示
+    override val todoCompletedAtPrefix = "完成于"
+    override val todoReminderPrefix = "提醒"
+    override val todoOverdue = "已逾期"
     
     // ==================== 日记 ====================
     override val journalTitle = "日记"
@@ -152,6 +165,8 @@ object ChineseStrings : Strings {
     // ==================== 日期格式化 ====================
     override fun formatDate(year: Int, month: Int, day: Int) = "${year}年${month}月${day}日"
     
+    override fun formatYearMonth(year: Int, month: Int) = "${year}年${month}月"
+    
     override fun getDayOfWeek(dayOfWeek: Int) = when (dayOfWeek) {
         1 -> "星期一"
         2 -> "星期二"
@@ -160,6 +175,17 @@ object ChineseStrings : Strings {
         5 -> "星期五"
         6 -> "星期六"
         7 -> "星期日"
+        else -> ""
+    }
+    
+    override fun getDayOfWeekShort(dayOfWeek: Int) = when (dayOfWeek) {
+        1 -> "一"
+        2 -> "二"
+        3 -> "三"
+        4 -> "四"
+        5 -> "五"
+        6 -> "六"
+        7 -> "日"
         else -> ""
     }
 }

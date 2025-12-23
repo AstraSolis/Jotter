@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,17 +23,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import top.astrasolis.jotter.data.AppContainer
+import top.astrasolis.jotter.data.Todo
+import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.DateDisplayWidget
 import top.astrasolis.jotter.ui.components.QuoteDisplayWidget
 import top.astrasolis.jotter.ui.components.TodayTodoCard
-import top.astrasolis.jotter.data.Todo
-import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.navigation.NavigationRoute
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.utils.DateUtils
-import top.astrasolis.jotter.utils.TimeUtils
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 // 响应式布局断点
 private val WIDE_LAYOUT_BREAKPOINT = 800.dp
@@ -47,7 +46,6 @@ private val HORIZONTAL_PADDING = 48.dp
  * - 底部：今日待办卡片（窄屏）
  * - 右侧：今日待办卡片（宽屏）
  */
-@OptIn(ExperimentalUuidApi::class)
 @Composable
 fun HomeScreen(
     innerPadding: PaddingValues,
@@ -63,18 +61,18 @@ fun HomeScreen(
     val quote = strings.homeQuoteDefault
     val quoteSource = strings.homeQuoteSource
     
-    // 今日待办
-    val currentTime = remember { TimeUtils.now() }
-    var todayTodos by remember {
-        mutableStateOf(
-            listOf(
-                Todo(id = Uuid.random().toString(), title = "完成项目文档", completed = false, createdAt = currentTime, updatedAt = currentTime),
-                Todo(id = Uuid.random().toString(), title = "购买日用品", completed = false, createdAt = currentTime, updatedAt = currentTime),
-                Todo(id = Uuid.random().toString(), title = "锻炼30分钟", completed = true, createdAt = currentTime, updatedAt = currentTime),
-                Todo(id = Uuid.random().toString(), title = "阅读技术书籍", completed = false, createdAt = currentTime, updatedAt = currentTime),
-                Todo(id = Uuid.random().toString(), title = "整理房间", completed = false, createdAt = currentTime, updatedAt = currentTime),
-            )
-        )
+    // 从 Repository 加载今日待办
+    val todoRepository = remember { AppContainer.todoRepository }
+    var todayTodos by remember { mutableStateOf<List<Todo>>(emptyList()) }
+    var refreshTrigger by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(refreshTrigger) {
+        todayTodos = todoRepository.getActiveTodos()
+    }
+    
+    // 刷新数据的辅助函数
+    fun refreshData() {
+        refreshTrigger++
     }
     
     BoxWithConstraints(
@@ -118,8 +116,14 @@ fun HomeScreen(
                         todos = todayTodos,
                         onTodoClick = { onNavigate(NavigationRoute.TODO) },
                         onToggle = { id ->
-                            todayTodos = todayTodos.map {
-                                if (it.id == id) it.copy(completed = !it.completed) else it
+                            val todo = todayTodos.find { it.id == id }
+                            if (todo != null) {
+                                if (todo.completed) {
+                                    todoRepository.uncompleteTodo(id)
+                                } else {
+                                    todoRepository.completeTodo(id)
+                                }
+                                refreshData()
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -162,8 +166,14 @@ fun HomeScreen(
                     todos = todayTodos,
                     onTodoClick = { onNavigate(NavigationRoute.TODO) },
                     onToggle = { id ->
-                        todayTodos = todayTodos.map {
-                            if (it.id == id) it.copy(completed = !it.completed) else it
+                        val todo = todayTodos.find { it.id == id }
+                        if (todo != null) {
+                            if (todo.completed) {
+                                todoRepository.uncompleteTodo(id)
+                            } else {
+                                todoRepository.completeTodo(id)
+                            }
+                            refreshData()
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),

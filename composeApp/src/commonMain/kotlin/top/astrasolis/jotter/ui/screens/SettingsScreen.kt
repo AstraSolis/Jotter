@@ -427,12 +427,15 @@ private fun DataSettingsPage(
                 title = strings.settingsDataDir,
                 summary = currentDataPath,
                 leftAction = {
-                    Icon(
-                        imageVector = Icons.Default.FolderOpen,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                        tint = MiuixTheme.colorScheme.onSurface,
-                    )
+                    Row {
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            tint = MiuixTheme.colorScheme.onSurface,
+                        )
+                        Spacer(modifier = Modifier.width(AppTheme.spacing.lg))
+                    }
                 },
                 onClick = {
                     scope.launch {

@@ -1,6 +1,5 @@
 package top.astrasolis.jotter.data
 
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,8 +21,8 @@ data class Todo(
     val category: String? = null,
     /** 优先级 */
     val priority: Priority = Priority.NORMAL,
-    /** 截止日期 */
-    val dueDate: LocalDate? = null,
+    /** 提醒时间 (epoch milliseconds) */
+    val dueDateTime: Long? = null,
     /** 完成时间 (epoch milliseconds) */
     val completedAt: Long? = null,
     /** 创建时间 (epoch milliseconds) */

@@ -31,6 +31,19 @@ interface Strings {
     val todoCategoryLife: String
     val todoCategoryHealth: String
     val todoCategoryStudy: String
+    // 编辑对话框
+    val todoAddTitle: String
+    val todoEditTitle: String
+    val todoTitleLabel: String
+    val todoDescLabel: String
+    val todoReminderLabel: String  // 提醒时间
+    val todoNoReminder: String
+    val todoSetReminder: String
+    val todoClearReminder: String
+    // 显示
+    val todoCompletedAtPrefix: String  // "完成于"
+    val todoReminderPrefix: String  // "提醒"
+    val todoOverdue: String  // "已逾期"
     
     // ==================== 日记 ====================
     val journalTitle: String
@@ -171,6 +184,12 @@ interface Strings {
     /** 格式化日期，如 "2025年12月22日" 或 "December 22, 2025" */
     fun formatDate(year: Int, month: Int, day: Int): String
     
+    /** 格式化年月，如 "2025年12月" 或 "December 2025" */
+    fun formatYearMonth(year: Int, month: Int): String
+    
     /** 获取星期几文本 */
     fun getDayOfWeek(dayOfWeek: Int): String
+    
+    /** 获取星期几简写，如 "一" 或 "Mon" */
+    fun getDayOfWeekShort(dayOfWeek: Int): String
 }
