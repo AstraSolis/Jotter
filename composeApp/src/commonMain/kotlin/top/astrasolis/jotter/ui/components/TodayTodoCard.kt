@@ -9,12 +9,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -31,7 +33,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import top.astrasolis.jotter.data.PriorityColors
 import top.astrasolis.jotter.data.Todo
+import top.astrasolis.jotter.data.partitionAndSortByPriority
 import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.theme.AppTheme
 import top.astrasolis.jotter.utils.DateUtils
@@ -84,12 +88,26 @@ fun TodayTodoCard(
                 modifier = Modifier.padding(vertical = AppTheme.spacing.lg),
             )
         } else {
+            // 使用扩展函数分离并排序待办
+            val (pendingTodos, completedTodos) = remember(todos) {
+                todos.partitionAndSortByPriority()
+            }
+            
             // 待办项列表 - 移除 weight 修饰符以避免在可滚动父容器中高度为 0 的问题
             Column(
                 modifier = Modifier
                     .fillMaxWidth(),
             ) {
-                todos.forEach { todo ->
+                // 先显示未完成的待办
+                pendingTodos.forEach { todo ->
+                    TodayTodoItem(
+                        todo = todo,
+                        onClick = { onTodoClick(todo.id) },
+                        onToggle = { onToggle(todo.id) },
+                    )
+                }
+                // 再显示已完成的待办
+                completedTodos.forEach { todo ->
                     TodayTodoItem(
                         todo = todo,
                         onClick = { onTodoClick(todo.id) },
@@ -187,8 +205,18 @@ private fun TodayTodoItem(
             text = todo.title,
             style = MiuixTheme.textStyles.body2,
             color = textColor,
-            modifier = Modifier.weight(1f),
         )
+        
+        // 优先级指示器（彩色小圆点）- 显示在名称后面
+        Spacer(modifier = Modifier.width(AppTheme.spacing.xs))
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(PriorityColors.forPriority(todo.priority))),
+        )
+        
+        Spacer(modifier = Modifier.weight(1f))
         
         // 标签显示在右侧
         if (todo.tag != null) {

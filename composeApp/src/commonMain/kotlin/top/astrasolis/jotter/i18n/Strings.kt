@@ -45,6 +45,7 @@ interface Strings {
     val todoOverdue: String  // "已逾期"
     // 优先级
     val todoPriorityLabel: String  // "优先级"
+    val todoNoDateGroup: String  // "未设置时间"
     
     // ==================== 日记 ====================
     val journalTitle: String

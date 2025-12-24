@@ -44,6 +44,7 @@ object ChineseStrings : Strings {
     override val todoOverdue = "已逾期"
     // 优先级
     override val todoPriorityLabel = "优先级"
+    override val todoNoDateGroup = "未设置时间"
     
     // ==================== 日记 ====================
     override val journalTitle = "日记"

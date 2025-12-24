@@ -44,6 +44,7 @@ object EnglishStrings : Strings {
     override val todoOverdue = "Overdue"
     // Priority
     override val todoPriorityLabel = "Priority"
+    override val todoNoDateGroup = "No Due Date"
     
     // ==================== Journal ====================
     override val journalTitle = "Journal"

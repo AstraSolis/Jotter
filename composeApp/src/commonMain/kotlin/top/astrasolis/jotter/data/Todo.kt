@@ -81,3 +81,55 @@ data class Todo(
 data class TodoList(
     val todos: List<Todo> = emptyList(),
 )
+
+// ==================== 排序扩展函数 ====================
+
+/**
+ * 分离并排序待办列表
+ * @return Pair(未完成待办按优先级排序, 已完成待办按优先级排序)
+ */
+fun List<Todo>.partitionAndSortByPriority(): Pair<List<Todo>, List<Todo>> {
+    val pending = this.filter { !it.completed }.sortedBy { it.priority }
+    val completed = this.filter { it.completed }.sortedBy { it.priority }
+    return pending to completed
+}
+
+/**
+ * 按时间和优先级排序待办列表
+ * 先按截止时间排序（无时间的排最后），时间相同按优先级排序
+ */
+fun List<Todo>.sortByTimeAndPriority(): List<Todo> =
+    this.sortedWith(
+        compareBy<Todo> { it.dueDateTime ?: Long.MAX_VALUE }
+            .thenBy { it.priority }
+    )
+
+// ==================== 优先级工具 ====================
+
+/**
+ * 优先级颜色（用于 UI 显示）
+ * 返回 ARGB 格式的颜色值
+ */
+object PriorityColors {
+    // P1: 红色（最高优先级）
+    const val P1 = 0xFFE53935L
+    // P2: 橙色
+    const val P2 = 0xFFFB8C00L
+    // P3: 黄色
+    const val P3 = 0xFFFDD835L
+    // P4: 蓝色
+    const val P4 = 0xFF42A5F5L
+    // P5: 灰色（最低/默认优先级）
+    const val P5 = 0xFF9E9E9EL
+    
+    /**
+     * 根据优先级获取颜色
+     */
+    fun forPriority(priority: Int): Long = when (priority) {
+        1 -> P1
+        2 -> P2
+        3 -> P3
+        4 -> P4
+        else -> P5
+    }
+}

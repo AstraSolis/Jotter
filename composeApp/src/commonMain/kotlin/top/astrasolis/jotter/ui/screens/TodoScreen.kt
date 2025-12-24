@@ -4,6 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -40,7 +41,9 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import top.astrasolis.jotter.data.AppContainer
+import top.astrasolis.jotter.data.PriorityColors
 import top.astrasolis.jotter.data.Todo
+import top.astrasolis.jotter.data.sortByTimeAndPriority
 import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.DeleteConfirmDialog
 import top.astrasolis.jotter.ui.components.JotterCard
@@ -80,12 +83,23 @@ fun TodoScreen(
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
     var deletingTodo by remember { mutableStateOf<Todo?>(null) }
     
-    // 未完成待办：按时间排序，时间相同按优先级排序
-    val pendingTodos = todos.filter { !it.completed }
-        .sortedWith(
-            compareBy<Todo> { it.dueDateTime ?: Long.MAX_VALUE }
-                .thenBy { it.priority }
-        )
+    // 未完成待办：分为无时间和有时间两部分
+    val allPendingTodos = todos.filter { !it.completed }
+    // 无时间的待办按优先级排序
+    val noDatePendingTodos = allPendingTodos
+        .filter { it.dueDateTime == null }
+        .sortedBy { it.priority }
+    // 有时间的待办按日期分组，每组按优先级排序
+    val pendingTodosByDate: Map<LocalDate, List<Todo>> = allPendingTodos
+        .filter { it.dueDateTime != null }
+        .groupBy { todo ->
+            Instant.fromEpochMilliseconds(todo.dueDateTime!!)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+        }
+        .mapValues { (_, todosInDate) -> todosInDate.sortedBy { it.priority } }
+        .toSortedMap()  // 按日期升序（最早的在前）
+    
     val completedTodos = todos.filter { it.completed }
     
     // 按完成日期对已完成待办进行分组（最近的日期在前），每组内按优先级排序
@@ -99,8 +113,15 @@ fun TodoScreen(
         .mapValues { (_, todosInDate) -> todosInDate.sortedBy { it.priority } }
         .toSortedMap(compareByDescending { it })
     
-    // 记录每个日期组的展开状态，默认全部收起
-    var expandedDates by remember { mutableStateOf<Set<LocalDate>>(emptySet()) }
+    // 记录每个日期组的展开状态（未完成和已完成分开管理）
+    // - 未完成的分组默认展开
+    var expandedPendingDates by remember(pendingTodosByDate.keys) { 
+        mutableStateOf<Set<LocalDate>>(pendingTodosByDate.keys.toSet()) 
+    }
+    // - 已完成的分组默认收起
+    var expandedCompletedDates by remember { 
+        mutableStateOf<Set<LocalDate>>(emptySet()) 
+    }
     
     // 刷新数据的辅助函数
     fun refreshData() {
@@ -139,29 +160,71 @@ fun TodoScreen(
                 verticalArrangement = Arrangement.spacedBy(AppTheme.spacing.md),
             ) {
                 // 待完成
-                if (pendingTodos.isNotEmpty()) {
+                if (allPendingTodos.isNotEmpty()) {
                     item {
                         SmallTitle(
-                            text = strings.todoPendingCount(pendingTodos.size),
+                            text = strings.todoPendingCount(allPendingTodos.size),
                             modifier = Modifier.padding(start = AppTheme.spacing.xs),
                         )
                     }
-                    items(pendingTodos, key = { it.id }) { todo ->
-                        TodoItemCard(
-                            todo = todo,
-                            onToggle = { id ->
-                                todoRepository.completeTodo(id)
-                                refreshData()
-                            },
-                            onClick = {
-                                editingTodo = todo
-                                showEditDialog.value = true
-                            },
-                            onLongClick = {
-                                deletingTodo = todo
-                                showDeleteDialog.value = true
-                            },
-                        )
+                    
+                    // 1. 先显示无时间的待办（不显示分组标题）
+                    if (noDatePendingTodos.isNotEmpty()) {
+                        items(noDatePendingTodos, key = { it.id }) { todo ->
+                            TodoItemCard(
+                                todo = todo,
+                                onToggle = { id ->
+                                    todoRepository.completeTodo(id)
+                                    refreshData()
+                                },
+                                onClick = {
+                                    editingTodo = todo
+                                    showEditDialog.value = true
+                                },
+                                onLongClick = {
+                                    deletingTodo = todo
+                                    showDeleteDialog.value = true
+                                },
+                            )
+                        }
+                    }
+                    
+                    // 2. 然后按日期分组显示有时间的待办
+                    pendingTodosByDate.forEach { (date, todosInDate) ->
+                        item(key = "header-pending-$date") {
+                            DateGroupHeader(
+                                date = date,
+                                count = todosInDate.size,
+                                expanded = date in expandedPendingDates,
+                                onToggle = {
+                                    expandedPendingDates = if (date in expandedPendingDates) {
+                                        expandedPendingDates - date
+                                    } else {
+                                        expandedPendingDates + date
+                                    }
+                                },
+                            )
+                        }
+                        
+                        if (date in expandedPendingDates) {
+                            items(todosInDate, key = { it.id }) { todo ->
+                                TodoItemCard(
+                                    todo = todo,
+                                    onToggle = { id ->
+                                        todoRepository.completeTodo(id)
+                                        refreshData()
+                                    },
+                                    onClick = {
+                                        editingTodo = todo
+                                        showEditDialog.value = true
+                                    },
+                                    onLongClick = {
+                                        deletingTodo = todo
+                                        showDeleteDialog.value = true
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
                 
@@ -181,19 +244,19 @@ fun TodoScreen(
                             DateGroupHeader(
                                 date = date,
                                 count = todosInDate.size,
-                                expanded = date in expandedDates,
+                                expanded = date in expandedCompletedDates,
                                 onToggle = {
-                                    expandedDates = if (date in expandedDates) {
-                                        expandedDates - date
+                                    expandedCompletedDates = if (date in expandedCompletedDates) {
+                                        expandedCompletedDates - date
                                     } else {
-                                        expandedDates + date
+                                        expandedCompletedDates + date
                                     }
                                 },
                             )
                         }
                         
                         // 仅在展开时显示该组的待办
-                        if (date in expandedDates) {
+                        if (date in expandedCompletedDates) {
                             items(todosInDate, key = { it.id }) { todo ->
                                 TodoItemCard(
                                     todo = todo,
@@ -300,6 +363,15 @@ private fun TodoItemCard(
                             maxLines = 1,
                         )
                     }
+                    
+                    // 优先级指示器（彩色小圆点）- 显示在名称/备注后面
+                    Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(Color(PriorityColors.forPriority(todo.priority))),
+                    )
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
@@ -431,6 +503,27 @@ private fun DateGroupHeader(
         
         Text(
             text = "$dateStr ($count)",
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onBackgroundVariant,
+        )
+    }
+}
+
+/**
+ * 无时间分组 Header - 用于显示未设置时间的待办
+ */
+@Composable
+private fun NoDateGroupHeader(
+    count: Int,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = AppTheme.spacing.sm, horizontal = AppTheme.spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "${strings.todoNoDateGroup} ($count)",
             style = MiuixTheme.textStyles.footnote1,
             color = MiuixTheme.colorScheme.onBackgroundVariant,
         )
