@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,9 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import top.astrasolis.jotter.data.AppContainer
@@ -54,7 +58,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
  * 待办事项页面
  * 显示待办列表，支持勾选完成、添加、编辑、删除
  */
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, kotlin.time.ExperimentalTime::class)
 @Composable
 fun TodoScreen(
     innerPadding: PaddingValues,
@@ -78,6 +82,19 @@ fun TodoScreen(
     
     val pendingTodos = todos.filter { !it.completed }
     val completedTodos = todos.filter { it.completed }
+    
+    // 按完成日期对已完成待办进行分组（最近的日期在前）
+    val completedTodosByDate: Map<LocalDate, List<Todo>> = completedTodos
+        .filter { it.completedAt != null }
+        .groupBy { todo ->
+            Instant.fromEpochMilliseconds(todo.completedAt!!)
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+        }
+        .toSortedMap(compareByDescending { it })
+    
+    // 记录每个日期组的展开状态，默认全部收起
+    var expandedDates by remember { mutableStateOf<Set<LocalDate>>(emptySet()) }
     
     // 刷新数据的辅助函数
     fun refreshData() {
@@ -142,8 +159,8 @@ fun TodoScreen(
                     }
                 }
                 
-                // 已完成
-                if (completedTodos.isNotEmpty()) {
+                // 已完成 - 按日期分组，支持展开/收起
+                if (completedTodosByDate.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(AppTheme.spacing.md))
                         SmallTitle(
@@ -151,22 +168,44 @@ fun TodoScreen(
                             modifier = Modifier.padding(start = AppTheme.spacing.xs),
                         )
                     }
-                    items(completedTodos, key = { it.id }) { todo ->
-                        TodoItemCard(
-                            todo = todo,
-                            onToggle = { id ->
-                                todoRepository.uncompleteTodo(id)
-                                refreshData()
-                            },
-                            onClick = {
-                                editingTodo = todo
-                                showEditDialog.value = true
-                            },
-                            onLongClick = {
-                                deletingTodo = todo
-                                showDeleteDialog.value = true
-                            },
-                        )
+                    
+                    completedTodosByDate.forEach { (date, todosInDate) ->
+                        // 日期组 Header（可点击展开/收起）
+                        item(key = "header-$date") {
+                            DateGroupHeader(
+                                date = date,
+                                count = todosInDate.size,
+                                expanded = date in expandedDates,
+                                onToggle = {
+                                    expandedDates = if (date in expandedDates) {
+                                        expandedDates - date
+                                    } else {
+                                        expandedDates + date
+                                    }
+                                },
+                            )
+                        }
+                        
+                        // 仅在展开时显示该组的待办
+                        if (date in expandedDates) {
+                            items(todosInDate, key = { it.id }) { todo ->
+                                TodoItemCard(
+                                    todo = todo,
+                                    onToggle = { id ->
+                                        todoRepository.uncompleteTodo(id)
+                                        refreshData()
+                                    },
+                                    onClick = {
+                                        editingTodo = todo
+                                        showEditDialog.value = true
+                                    },
+                                    onLongClick = {
+                                        deletingTodo = todo
+                                        showDeleteDialog.value = true
+                                    },
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -345,6 +384,52 @@ private fun buildDateInfoText(todo: Todo, today: kotlinx.datetime.LocalDate): Da
     return null
 }
 
+
+/**
+ * 日期分组 Header - 可展开/收起
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DateGroupHeader(
+    date: LocalDate,
+    count: Int,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    // 箭头旋转动画
+    val rotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "arrow_rotation",
+    )
+    
+    val dateStr = strings.formatDate(date.year, date.monthNumber, date.dayOfMonth)
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(AppTheme.radii.md))
+            .combinedClickable(onClick = onToggle)
+            .padding(vertical = AppTheme.spacing.sm, horizontal = AppTheme.spacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = if (expanded) strings.actionCollapse else strings.actionExpand,
+            modifier = Modifier
+                .size(20.dp)
+                .graphicsLayer { rotationZ = rotation },
+            tint = MiuixTheme.colorScheme.onBackgroundVariant,
+        )
+        
+        Spacer(modifier = Modifier.width(AppTheme.spacing.xs))
+        
+        Text(
+            text = "$dateStr ($count)",
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onBackgroundVariant,
+        )
+    }
+}
 
 @Composable
 private fun EmptyTodoState(modifier: Modifier = Modifier) {

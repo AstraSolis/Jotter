@@ -152,6 +152,8 @@ interface Strings {
     val loading: String
     val add: String
     val untitled: String
+    val actionExpand: String   // 展开（无障碍）
+    val actionCollapse: String // 收起（无障碍）
     
     // 对话框
     val dialogDeleteTitle: String

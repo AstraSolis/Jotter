@@ -148,6 +148,8 @@ object EnglishStrings : Strings {
     override val loading = "Loading..."
     override val add = "Add"
     override val untitled = "Untitled"
+    override val actionExpand = "Expand"
+    override val actionCollapse = "Collapse"
     
     // Dialog
     override val dialogDeleteTitle = "Confirm Delete"

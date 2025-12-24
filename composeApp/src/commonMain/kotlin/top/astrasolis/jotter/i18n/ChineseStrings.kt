@@ -148,6 +148,8 @@ object ChineseStrings : Strings {
     override val loading = "加载中..."
     override val add = "添加"
     override val untitled = "无标题"
+    override val actionExpand = "展开"
+    override val actionCollapse = "收起"
     
     // 对话框
     override val dialogDeleteTitle = "删除确认"
