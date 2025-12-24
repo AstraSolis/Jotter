@@ -42,6 +42,8 @@ object EnglishStrings : Strings {
     override val todoCompletedAtPrefix = "Completed"
     override val todoReminderPrefix = ""
     override val todoOverdue = "Overdue"
+    // Priority
+    override val todoPriorityLabel = "Priority"
     
     // ==================== Journal ====================
     override val journalTitle = "Journal"
@@ -161,6 +163,7 @@ object EnglishStrings : Strings {
     override fun todoCompletedCount(count: Int) = "Completed ($count)"
     override fun countPieces(count: Int) = "$count"
     override fun countItems(count: Int) = "$count"
+    override fun todoPriorityValue(level: Int) = "P$level"
     override fun devModeClicksRemaining(count: Int) = "Tap $count more times to activate developer mode"
     
     // ==================== Date Formatting ====================

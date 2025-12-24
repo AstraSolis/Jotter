@@ -38,6 +38,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.extra.SuperDialog
+import top.yukonga.miuix.kmp.extra.SuperDropdown
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -61,6 +62,8 @@ fun TodoEditDialog(
     var todoDescription by remember(todo) { mutableStateOf(todo?.description ?: "") }
     var todoTag by remember(todo) { mutableStateOf(todo?.tag ?: "") }
     var todoDueDateTime by remember(todo) { mutableStateOf(todo?.dueDateTime) }
+    // 优先级状态 (index 0-4 对应 P1-P5)
+    var selectedPriorityIndex by remember(todo) { mutableStateOf((todo?.priority ?: 5) - 1) }
     
     SuperDialog(
         title = title,
@@ -93,6 +96,19 @@ fun TodoEditDialog(
                 selectedTag = todoTag.ifEmpty { null },
                 onTagSelected = { tag -> todoTag = tag ?: "" },
             )
+            
+            Spacer(modifier = Modifier.height(AppTheme.spacing.md))
+            
+            // 优先级选择
+            val priorityOptions = (1..5).map { strings.todoPriorityValue(it) }
+            top.yukonga.miuix.kmp.basic.Card {
+                SuperDropdown(
+                    title = strings.todoPriorityLabel,
+                    items = priorityOptions,
+                    selectedIndex = selectedPriorityIndex,
+                    onSelectedIndexChange = { selectedPriorityIndex = it },
+                )
+            }
             
             Spacer(modifier = Modifier.height(AppTheme.spacing.md))
             
@@ -167,6 +183,7 @@ fun TodoEditDialog(
                                     title = trimmedTitle,
                                     description = todoDescription.trim(),
                                     tag = todoTag.trim().ifEmpty { null },
+                                    priority = selectedPriorityIndex + 1,
                                     dueDateTime = todoDueDateTime,
                                     updatedAt = currentTime,
                                 )
@@ -176,6 +193,7 @@ fun TodoEditDialog(
                                     title = trimmedTitle,
                                     description = todoDescription.trim(),
                                     tag = todoTag.trim().ifEmpty { null },
+                                    priority = selectedPriorityIndex + 1,
                                     dueDateTime = todoDueDateTime,
                                     createdAt = currentTime,
                                     updatedAt = currentTime,

@@ -42,6 +42,8 @@ object ChineseStrings : Strings {
     override val todoCompletedAtPrefix = "完成于"
     override val todoReminderPrefix = ""
     override val todoOverdue = "已逾期"
+    // 优先级
+    override val todoPriorityLabel = "优先级"
     
     // ==================== 日记 ====================
     override val journalTitle = "日记"
@@ -161,6 +163,7 @@ object ChineseStrings : Strings {
     override fun todoCompletedCount(count: Int) = "已完成 ($count)"
     override fun countPieces(count: Int) = "$count 篇"
     override fun countItems(count: Int) = "$count 条"
+    override fun todoPriorityValue(level: Int) = "P$level"
     override fun devModeClicksRemaining(count: Int) = "再点 $count 次激活开发者模式"
     
     // ==================== 日期格式化 ====================

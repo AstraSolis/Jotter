@@ -80,10 +80,15 @@ fun TodoScreen(
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
     var deletingTodo by remember { mutableStateOf<Todo?>(null) }
     
+    // 未完成待办：按时间排序，时间相同按优先级排序
     val pendingTodos = todos.filter { !it.completed }
+        .sortedWith(
+            compareBy<Todo> { it.dueDateTime ?: Long.MAX_VALUE }
+                .thenBy { it.priority }
+        )
     val completedTodos = todos.filter { it.completed }
     
-    // 按完成日期对已完成待办进行分组（最近的日期在前）
+    // 按完成日期对已完成待办进行分组（最近的日期在前），每组内按优先级排序
     val completedTodosByDate: Map<LocalDate, List<Todo>> = completedTodos
         .filter { it.completedAt != null }
         .groupBy { todo ->
@@ -91,6 +96,7 @@ fun TodoScreen(
                 .toLocalDateTime(TimeZone.currentSystemDefault())
                 .date
         }
+        .mapValues { (_, todosInDate) -> todosInDate.sortedBy { it.priority } }
         .toSortedMap(compareByDescending { it })
     
     // 记录每个日期组的展开状态，默认全部收起

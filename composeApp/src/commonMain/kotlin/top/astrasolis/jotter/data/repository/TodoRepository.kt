@@ -26,6 +26,7 @@ class TodoRepository(
         prettyPrint = true
         ignoreUnknownKeys = true
         encodeDefaults = true
+        coerceInputValues = true  // 无法解析的值使用默认值，兼容旧数据
     }
     
     private val todosDir: Path

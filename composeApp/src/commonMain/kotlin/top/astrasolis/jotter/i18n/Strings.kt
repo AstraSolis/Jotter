@@ -43,6 +43,8 @@ interface Strings {
     val todoCompletedAtPrefix: String  // "完成于"
     val todoReminderPrefix: String  // 时间前缀（可为空）
     val todoOverdue: String  // "已逾期"
+    // 优先级
+    val todoPriorityLabel: String  // "优先级"
     
     // ==================== 日记 ====================
     val journalTitle: String
@@ -177,6 +179,9 @@ interface Strings {
     
     /** "n 条" */
     fun countItems(count: Int): String
+    
+    /** "P1" ~ "P5" */
+    fun todoPriorityValue(level: Int): String
     
     /** "再点 n 次激活开发者模式" */
     fun devModeClicksRemaining(count: Int): String
