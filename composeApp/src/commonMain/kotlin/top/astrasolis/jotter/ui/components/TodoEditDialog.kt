@@ -1,20 +1,13 @@
 @file:OptIn(kotlin.time.ExperimentalTime::class)
 package top.astrasolis.jotter.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -23,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -227,9 +219,8 @@ private fun formatDateTime(epochMs: Long?): String {
 }
 
 /**
- * 标签选择器组件
+ * 标签选择器组件 (下拉菜单样式)
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TagSelector(
     selectedTag: String?,
@@ -240,42 +231,38 @@ private fun TagSelector(
     var showNewTagInput by remember { mutableStateOf(false) }
     var newTagText by remember { mutableStateOf("") }
     
+    // 构建选项列表: "无" + 已有标签 + "新建"
+    val tagOptions = buildList {
+        add(strings.todoNoTag)
+        addAll(availableTags)
+        add("+ ${strings.todoAddTag}")
+    }
+    
+    // 计算当前选中的索引
+    val selectedIndex = when {
+        selectedTag == null -> 0
+        else -> {
+            val tagIndex = availableTags.indexOf(selectedTag)
+            if (tagIndex >= 0) tagIndex + 1 else 0
+        }
+    }
+    
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = strings.todoTagLabel,
-            style = MiuixTheme.textStyles.footnote1,
-            color = MiuixTheme.colorScheme.onBackgroundVariant,
-        )
-        
-        Spacer(modifier = Modifier.height(AppTheme.spacing.xs))
-        
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppTheme.spacing.sm),
-            verticalArrangement = Arrangement.spacedBy(AppTheme.spacing.sm),
-        ) {
-            // "无" 选项
-            TagChip(
-                text = strings.todoNoTag,
-                isSelected = selectedTag == null,
-                onClick = { onTagSelected(null) },
-            )
-            
-            // 已有标签
-            availableTags.forEach { tag ->
-                TagChip(
-                    text = tag,
-                    isSelected = selectedTag == tag,
-                    onClick = { onTagSelected(tag) },
-                )
-            }
-            
-            // 新建按钮
-            TagChip(
-                text = "+ ${strings.todoAddTag}",
-                isSelected = false,
-                isAction = true,
-                onClick = { showNewTagInput = true },
+        top.yukonga.miuix.kmp.basic.Card {
+            SuperDropdown(
+                title = strings.todoTagLabel,
+                items = tagOptions,
+                selectedIndex = selectedIndex,
+                onSelectedIndexChange = { index ->
+                    when {
+                        // 选择 "无"
+                        index == 0 -> onTagSelected(null)
+                        // 选择 "新建"
+                        index == tagOptions.lastIndex -> showNewTagInput = true
+                        // 选择已有标签
+                        else -> onTagSelected(availableTags[index - 1])
+                    }
+                },
             )
         }
         
@@ -309,44 +296,4 @@ private fun TagSelector(
             }
         }
     }
-}
-
-/**
- * 标签 Chip 组件
- */
-@Composable
-private fun TagChip(
-    text: String,
-    isSelected: Boolean,
-    isAction: Boolean = false,
-    onClick: () -> Unit,
-) {
-    val shape = RoundedCornerShape(16.dp)
-    val backgroundColor = when {
-        isSelected -> MiuixTheme.colorScheme.primary.copy(alpha = 0.15f)
-        isAction -> MiuixTheme.colorScheme.surfaceVariant
-        else -> MiuixTheme.colorScheme.surfaceVariant
-    }
-    val borderColor = if (isSelected) {
-        MiuixTheme.colorScheme.primary
-    } else {
-        MiuixTheme.colorScheme.outline.copy(alpha = 0.3f)
-    }
-    val textColor = when {
-        isSelected -> MiuixTheme.colorScheme.primary
-        isAction -> MiuixTheme.colorScheme.primary
-        else -> MiuixTheme.colorScheme.onSurface
-    }
-    
-    Text(
-        text = text,
-        style = MiuixTheme.textStyles.footnote1,
-        color = textColor,
-        modifier = Modifier
-            .clip(shape)
-            .background(backgroundColor)
-            .border(1.dp, borderColor, shape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-    )
 }

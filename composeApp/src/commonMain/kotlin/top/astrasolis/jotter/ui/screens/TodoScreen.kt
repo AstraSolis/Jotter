@@ -41,13 +41,12 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import top.astrasolis.jotter.data.AppContainer
-import top.astrasolis.jotter.data.PriorityColors
 import top.astrasolis.jotter.data.Todo
-import top.astrasolis.jotter.data.sortByTimeAndPriority
 import top.astrasolis.jotter.i18n.strings
 import top.astrasolis.jotter.ui.components.DeleteConfirmDialog
 import top.astrasolis.jotter.ui.components.JotterCard
 import top.astrasolis.jotter.ui.components.PageTitleBar
+import top.astrasolis.jotter.ui.components.PriorityBadge
 import top.astrasolis.jotter.ui.components.SmallTitle
 import top.astrasolis.jotter.ui.components.TodoEditDialog
 import top.astrasolis.jotter.ui.theme.AppTheme
@@ -308,7 +307,7 @@ fun TodoScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, kotlin.time.ExperimentalTime::class)
 @Composable
 private fun TodoItemCard(
     todo: Todo,
@@ -318,7 +317,20 @@ private fun TodoItemCard(
 ) {
     val today = remember { DateUtils.today() }
     
+    // 判断是否逾期
+    val isOverdue = remember(todo) {
+        if (todo.completed || todo.dueDateTime == null) {
+            false
+        } else {
+            val dueDate = Instant.fromEpochMilliseconds(todo.dueDateTime)
+                .toLocalDateTime(TimeZone.currentSystemDefault()).date
+            dueDate < today
+        }
+    }
+    
     JotterCard {
+        val dateInfo = buildDateInfoText(todo, today)
+        
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -329,6 +341,7 @@ private fun TodoItemCard(
                 .padding(AppTheme.spacing.lg),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // 左侧：Checkbox + 优先级 + 标题 + 备注
             Checkbox(
                 checked = todo.completed,
                 onCheckedChange = { onToggle(todo.id) },
@@ -336,65 +349,54 @@ private fun TodoItemCard(
             
             Spacer(modifier = Modifier.width(AppTheme.spacing.md))
             
-            Column(modifier = Modifier.weight(1f)) {
-                // 标题行：标题 + 备注 + 标签
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // 标题
+            PriorityBadge(priority = todo.priority)
+            
+            Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
+            
+            Text(
+                text = todo.title,
+                style = MiuixTheme.textStyles.body1,
+                color = when {
+                    todo.completed -> MiuixTheme.colorScheme.onBackgroundVariant
+                    isOverdue -> Color(0xFFE53935)
+                    else -> MiuixTheme.colorScheme.onBackground
+                },
+            )
+            
+            if (todo.description.isNotEmpty()) {
+                Spacer(modifier = Modifier.width(AppTheme.spacing.xs))
+                Text(
+                    text = "(${todo.description})",
+                    style = MiuixTheme.textStyles.footnote1,
+                    color = MiuixTheme.colorScheme.onBackgroundVariant,
+                    maxLines = 1,
+                )
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            // 右侧：标签/时间（Column 用于两行时垂直排列）
+            Column(
+                horizontalAlignment = Alignment.End,
+            ) {
+                // 标签（如果有）
+                if (todo.tag != null) {
                     Text(
-                        text = todo.title,
-                        style = MiuixTheme.textStyles.body1,
-                        color = if (todo.completed) {
-                            MiuixTheme.colorScheme.onBackgroundVariant
-                        } else {
-                            MiuixTheme.colorScheme.onBackground
-                        },
-                    )
-                    
-                    // 备注显示在标题后面
-                    if (todo.description.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
-                        Text(
-                            text = todo.description,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onBackgroundVariant,
-                            maxLines = 1,
-                        )
-                    }
-                    
-                    // 优先级指示器（彩色小圆点）- 显示在名称/备注后面
-                    Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
-                    Box(
+                        text = todo.tag,
+                        style = MiuixTheme.textStyles.footnote2,
+                        color = MiuixTheme.colorScheme.primary,
                         modifier = Modifier
-                            .size(10.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Color(PriorityColors.forPriority(todo.priority))),
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
                     )
-                    
-                    Spacer(modifier = Modifier.weight(1f))
-                    
-                    // 标签显示在右侧
-                    if (todo.tag != null) {
-                        Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
-                        Text(
-                            text = todo.tag,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
-                                .padding(horizontal = 10.dp, vertical = 3.dp),
-                        )
-                    }
                 }
                 
-                
-                // 显示截止日期或完成时间
-                val dateInfo = buildDateInfoText(todo, today)
+                // 时间（如果有）
                 if (dateInfo != null) {
-                    Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
+                    if (todo.tag != null) {
+                        Spacer(modifier = Modifier.height(AppTheme.spacing.xxs))
+                    }
                     Text(
                         text = dateInfo.text,
                         style = MiuixTheme.textStyles.footnote1,
@@ -448,7 +450,7 @@ private fun buildDateInfoText(todo: Todo, today: kotlinx.datetime.LocalDate): Da
         
         return if (isOverdue) {
             DateInfoText(
-                text = "${strings.todoOverdue}: $dateStr $timeStr",
+                text = "$dateStr $timeStr",
                 color = Color(0xFFE53935),
             )
         } else {

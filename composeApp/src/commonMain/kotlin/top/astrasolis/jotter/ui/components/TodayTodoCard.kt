@@ -9,14 +9,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -33,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import top.astrasolis.jotter.data.PriorityColors
 import top.astrasolis.jotter.data.Todo
 import top.astrasolis.jotter.data.partitionAndSortByPriority
 import top.astrasolis.jotter.i18n.strings
@@ -200,21 +197,29 @@ private fun TodayTodoItem(
         
         Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
         
+        // 优先级 Badge
+        PriorityBadge(priority = todo.priority)
+        
+        Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
+        
         // 标题
         Text(
             text = todo.title,
             style = MiuixTheme.textStyles.body2,
             color = textColor,
+            maxLines = 1,
         )
         
-        // 优先级指示器（彩色小圆点）- 显示在名称后面
-        Spacer(modifier = Modifier.width(AppTheme.spacing.xs))
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .clip(RoundedCornerShape(50))
-                .background(Color(PriorityColors.forPriority(todo.priority))),
-        )
+        // 备注紧跟标题（括号包裹）
+        if (todo.description.isNotEmpty()) {
+            Spacer(modifier = Modifier.width(AppTheme.spacing.xs))
+            Text(
+                text = "(${todo.description})",
+                style = MiuixTheme.textStyles.footnote1,
+                color = MiuixTheme.colorScheme.onBackgroundVariant,
+                maxLines = 1,
+            )
+        }
         
         Spacer(modifier = Modifier.weight(1f))
         
@@ -223,12 +228,12 @@ private fun TodayTodoItem(
             Spacer(modifier = Modifier.width(AppTheme.spacing.sm))
             Text(
                 text = todo.tag,
-                style = MiuixTheme.textStyles.body2,
+                style = MiuixTheme.textStyles.footnote2,
                 color = MiuixTheme.colorScheme.primary,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
-                    .padding(horizontal = 10.dp, vertical = 3.dp),
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
             )
         }
     }
