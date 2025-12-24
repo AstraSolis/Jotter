@@ -73,7 +73,7 @@ fun TodoScreen(
     var refreshTrigger by remember { mutableStateOf(0) }
     
     LaunchedEffect(refreshTrigger) {
-        todos = todoRepository.getActiveTodos()
+        todos = todoRepository.getAllTodos()
     }
     
     // 对话框状态

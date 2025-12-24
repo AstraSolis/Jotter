@@ -12,7 +12,6 @@ import top.astrasolis.jotter.data.Todo
 import top.astrasolis.jotter.data.TodoList
 import top.astrasolis.jotter.platform.PlatformFileSystem
 import top.astrasolis.jotter.utils.TimeUtils
-import kotlin.time.Duration.Companion.days
 
 /**
  * 待办事项仓库
@@ -106,10 +105,28 @@ class TodoRepository(
     
     /**
      * 删除待办
+     * 同时检查活跃文件和归档文件
      */
     fun deleteTodo(id: String) {
-        val todos = getActiveTodos().filter { it.id != id }
-        saveActiveTodos(todos)
+        // 先从活跃文件删除
+        val activeTodos = getActiveTodos()
+        val filteredActive = activeTodos.filter { it.id != id }
+        
+        if (filteredActive.size < activeTodos.size) {
+            saveActiveTodos(filteredActive)
+            return
+        }
+        
+        // 在归档中查找并删除
+        for (year in getArchiveYears()) {
+            val archivedTodos = loadArchivedTodos(year)
+            val filtered = archivedTodos.filter { it.id != id }
+            
+            if (filtered.size < archivedTodos.size) {
+                saveArchivedTodos(year, filtered)
+                return
+            }
+        }
     }
     
     /**
@@ -132,18 +149,42 @@ class TodoRepository(
     
     /**
      * 取消完成待办
+     * 如果待办已归档，会从归档移回活跃文件
      */
     fun uncompleteTodo(id: String) {
-        val todos = getActiveTodos().toMutableList()
-        val index = todos.indexOfFirst { it.id == id }
+        // 先尝试在活跃文件中查找
+        val activeTodos = getActiveTodos().toMutableList()
+        val activeIndex = activeTodos.indexOfFirst { it.id == id }
         
-        if (index >= 0) {
-            todos[index] = todos[index].copy(
+        if (activeIndex >= 0) {
+            activeTodos[activeIndex] = activeTodos[activeIndex].copy(
                 completed = false,
                 completedAt = null,
                 updatedAt = TimeUtils.now(),
             )
-            saveActiveTodos(todos)
+            saveActiveTodos(activeTodos)
+            return
+        }
+        
+        // 在归档中查找
+        for (year in getArchiveYears()) {
+            val archivedTodos = loadArchivedTodos(year).toMutableList()
+            val archivedIndex = archivedTodos.indexOfFirst { it.id == id }
+            
+            if (archivedIndex >= 0) {
+                val todo = archivedTodos[archivedIndex].copy(
+                    completed = false,
+                    completedAt = null,
+                    updatedAt = TimeUtils.now(),
+                )
+                
+                archivedTodos.removeAt(archivedIndex)
+                saveArchivedTodos(year, archivedTodos)
+                
+                activeTodos.add(todo)
+                saveActiveTodos(activeTodos)
+                return
+            }
         }
     }
     
@@ -185,10 +226,39 @@ class TodoRepository(
     }
     
     /**
-     * 获取归档的待办
+     * 获取指定年份的归档待办
      */
     fun getArchivedTodos(year: Int): List<Todo> {
         return loadArchivedTodos(year)
+    }
+    
+    /**
+     * 获取所有年份的归档待办
+     */
+    fun getAllArchivedTodos(): List<Todo> {
+        return getArchiveYears().flatMap { year -> loadArchivedTodos(year) }
+    }
+    
+    /**
+     * 获取所有已完成待办（活跃 + 归档）
+     * 按完成时间降序排列
+     */
+    fun getAllCompletedTodos(): List<Todo> {
+        val activeCompleted = getActiveTodos().filter { it.completed }
+        val archived = getAllArchivedTodos()
+        return (activeCompleted + archived)
+            .distinctBy { it.id }
+            .sortedByDescending { it.completedAt ?: 0L }
+    }
+    
+    /**
+     * 获取全部待办（活跃未完成 + 所有已完成）
+     * 用于 TodoScreen 显示
+     */
+    fun getAllTodos(): List<Todo> {
+        val activePending = getActiveTodos().filter { !it.completed }
+        val allCompleted = getAllCompletedTodos()
+        return activePending + allCompleted
     }
     
     private fun saveActiveTodos(todos: List<Todo>) {
@@ -212,5 +282,21 @@ class TodoRepository(
         fileSystem.createDirectories(path.parent!!)
         val content = json.encodeToString(TodoList(todos))
         fileSystem.writeText(path, content)
+    }
+    
+    /**
+     * 获取所有归档年份列表
+     */
+    private fun getArchiveYears(): List<Int> {
+        val archiveDir = todosDir / "archive"
+        if (!fileSystem.exists(archiveDir)) return emptyList()
+        
+        return try {
+            fileSystem.list(archiveDir)
+                .filter { it.name.endsWith(".json") }
+                .mapNotNull { it.name.removeSuffix(".json").toIntOrNull() }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

@@ -56,6 +56,9 @@ object AppContainer {
     fun initialize() {
         val dataPath = settingsRepository.getDataPath()
         dataDirectoryManager.initializeDataDirectory(dataPath)
+        
+        // 归档已完成超过7天的待办
+        todoRepository.archiveCompletedTodos()
     }
     
     /**
